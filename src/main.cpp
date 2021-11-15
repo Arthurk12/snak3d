@@ -180,6 +180,25 @@ GLint bbox_max_uniform;
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
 
+// Translação da cobra no eixo X e Y em relação ao tabuleiro
+float upDownTranslate = 0.0f;
+float leftRightTranslate = 0.0f;
+
+// Direções em que a cobra estará se movimentando
+#define UP    0
+#define DOWN  1
+#define LEFT  2
+#define RIGHT 3
+
+// Variáveis auxiliares no movimento da cobra
+int actualDirection = RIGHT;
+float lastTimeUpDown = 0.0;
+float lastTimeLeftRight = 0.0;
+float timeWhenChangeDirectionUp = 0.0;
+float timeWhenChangeDirectionDown = 0.0;
+float timeWhenChangeDirectionRight = 0.0;
+float timeWhenChangeDirectionLeft = 0.0;
+
 int main(int argc, char* argv[])
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -258,9 +277,9 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/fruit_texture.jpeg");      // TextureImage1
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
-    //ObjModel spheremodel("../../data/sphere.obj");
-    //ComputeNormals(&spheremodel);
-    //BuildTrianglesAndAddToVirtualScene(&spheremodel);
+    ObjModel spheremodel("../../data/sphere.obj");
+    ComputeNormals(&spheremodel);
+    BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
     ObjModel fruitmodel("../../data/fruit.obj");
     ComputeNormals(&fruitmodel);
@@ -380,14 +399,35 @@ int main(int argc, char* argv[])
         #define PLANE  2
         #define FRUIT  3
 
+
+
+        if (actualDirection == UP) {
+            timeWhenChangeDirectionRight = (float)glfwGetTime()*5.0f/5 - leftRightTranslate;
+            timeWhenChangeDirectionLeft = (float)glfwGetTime()*5.0f/5 + leftRightTranslate;
+            upDownTranslate = -(float)glfwGetTime()*5.0f/5 + timeWhenChangeDirectionUp;
+        }
+        if (actualDirection == DOWN) {
+            timeWhenChangeDirectionRight = (float)glfwGetTime()*5.0f/5 - leftRightTranslate;
+            timeWhenChangeDirectionLeft = (float)glfwGetTime()*5.0f/5 + leftRightTranslate;
+            upDownTranslate = (float)glfwGetTime()*5.0f/5 - timeWhenChangeDirectionDown;
+        }
+        if (actualDirection == LEFT) {
+            timeWhenChangeDirectionUp = (float)glfwGetTime()*5.0f/5 + upDownTranslate;
+            timeWhenChangeDirectionDown = (float)glfwGetTime()*5.0f/5 - upDownTranslate;
+            leftRightTranslate = -(float)glfwGetTime()*5.0f/5 + timeWhenChangeDirectionLeft;
+        }
+        if (actualDirection == RIGHT) {
+            timeWhenChangeDirectionUp = (float)glfwGetTime()*5.0f/5 + upDownTranslate;
+            timeWhenChangeDirectionDown = (float)glfwGetTime()*5.0f/5 - upDownTranslate;
+            leftRightTranslate = (float)glfwGetTime()*5.0f/5 - timeWhenChangeDirectionRight;
+        }
         // Desenhamos o modelo da esfera
-        /*model = Matrix_Translate(-1.0f,0.0f,0.0f)
-              * Matrix_Rotate_Z(0.6f)
-              * Matrix_Rotate_X(0.2f)
-              * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+        model = Matrix_Translate(0.0,-1,0.07)
+              * Matrix_Scale(0.08, 0.08, 0.08)
+              * Matrix_Translate(leftRightTranslate, 0, upDownTranslate);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, SPHERE);
-        DrawVirtualObject("sphere");*/
+        DrawVirtualObject("sphere");
 
         // Desenhamos o modelo do coelho
         /*model = Matrix_Translate(1.0f,0.0f,0.0f);
@@ -1203,6 +1243,30 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         LoadShadersFromFiles();
         fprintf(stdout,"Shaders recarregados!\n");
         fflush(stdout);
+    }
+
+    // Se o usuário apertar a tecla A, movemos a cobra para a esquerda.
+    if (key == GLFW_KEY_A && action == GLFW_PRESS && actualDirection != RIGHT)
+    {
+        actualDirection = LEFT;
+    }
+
+    // Se o usuário apertar a tecla D, movemos a cobra para a direita.
+    if (key == GLFW_KEY_D && action == GLFW_PRESS && actualDirection != LEFT)
+    {
+        actualDirection = RIGHT;
+    }
+
+    // Se o usuário apertar a tecla W, movemos a cobra para cima.
+    if (key == GLFW_KEY_W && action == GLFW_PRESS && actualDirection != DOWN)
+    {
+        actualDirection = UP;
+    }
+
+        // Se o usuário apertar a tecla S, movemos a cobra para baixo.
+    if (key == GLFW_KEY_S && action == GLFW_PRESS && actualDirection != UP)
+    {
+        actualDirection = DOWN;
     }
 }
 
