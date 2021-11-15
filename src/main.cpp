@@ -1,6 +1,8 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
+#include <iostream>
 
 // Headers abaixo são específicos de C++
 #include <map>
@@ -316,6 +318,11 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
 
+    // Posição X e Y em relação ao tabuleiro da posição inicial da fruta
+    srand((unsigned)time(NULL));
+    float fruitPositionX = ((float)(rand() % 184) / 100) - 0.92;
+    float fruitPositionY = ((float)(rand() % 184) / 100) - 0.92;
+
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -399,28 +406,30 @@ int main(int argc, char* argv[])
         #define PLANE  2
         #define FRUIT  3
 
-
-
         if (actualDirection == UP) {
             timeWhenChangeDirectionRight = (float)glfwGetTime()*5.0f/5 - leftRightTranslate;
             timeWhenChangeDirectionLeft = (float)glfwGetTime()*5.0f/5 + leftRightTranslate;
             upDownTranslate = -(float)glfwGetTime()*5.0f/5 + timeWhenChangeDirectionUp;
         }
+
         if (actualDirection == DOWN) {
             timeWhenChangeDirectionRight = (float)glfwGetTime()*5.0f/5 - leftRightTranslate;
             timeWhenChangeDirectionLeft = (float)glfwGetTime()*5.0f/5 + leftRightTranslate;
             upDownTranslate = (float)glfwGetTime()*5.0f/5 - timeWhenChangeDirectionDown;
         }
+
         if (actualDirection == LEFT) {
             timeWhenChangeDirectionUp = (float)glfwGetTime()*5.0f/5 + upDownTranslate;
             timeWhenChangeDirectionDown = (float)glfwGetTime()*5.0f/5 - upDownTranslate;
             leftRightTranslate = -(float)glfwGetTime()*5.0f/5 + timeWhenChangeDirectionLeft;
         }
+
         if (actualDirection == RIGHT) {
             timeWhenChangeDirectionUp = (float)glfwGetTime()*5.0f/5 + upDownTranslate;
             timeWhenChangeDirectionDown = (float)glfwGetTime()*5.0f/5 - upDownTranslate;
             leftRightTranslate = (float)glfwGetTime()*5.0f/5 - timeWhenChangeDirectionRight;
         }
+
         // Desenhamos o modelo da esfera
         model = Matrix_Translate(0.0,-1,0.07)
               * Matrix_Scale(0.08, 0.08, 0.08)
@@ -436,10 +445,16 @@ int main(int argc, char* argv[])
         glUniform1i(object_id_uniform, BUNNY);
         DrawVirtualObject("bunny");*/
 
-        model = Matrix_Translate(-0.95,-1,0.07)
-                * Matrix_Scale(0.08, 0.08, 0.08)
-                * Matrix_Rotate_Y((float)glfwGetTime() * 0.1f)
-                * Matrix_Translate(0, sin((float)glfwGetTime()*5.0f)/5, 0);
+        // Nesse condicional vamos testar a colisão, se colidiu cria nova posição pra fruta
+        if (false){
+            fruitPositionX = ((float)(rand() % 184) / 100) - 0.92;
+            fruitPositionY = ((float)(rand() % 184) / 100) - 0.92;
+        }
+
+        model = Matrix_Translate(fruitPositionX,-1,fruitPositionY)
+            * Matrix_Scale(0.08, 0.08, 0.08)
+            * Matrix_Rotate_Y((float)glfwGetTime() * 0.1f)
+            * Matrix_Translate(0, sin((float)glfwGetTime()*5.0f)/5, 0);
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(object_id_uniform, FRUIT);
         DrawVirtualObject("fruit");
