@@ -33,7 +33,6 @@
 #include "utils.h"
 #include "matrices.h"
 
-#define TITLE "SNAK3D"
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -182,24 +181,34 @@ GLint bbox_max_uniform;
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
 
-// Translação da cobra no eixo X e Y em relação ao tabuleiro
-float upDownTranslate = 0.0f;
-float leftRightTranslate = 0.0f;
+#define TITLE "SNAK3D"
 
 // Direções em que a cobra estará se movimentando
 #define UP    0
-#define DOWN  1
-#define LEFT  2
-#define RIGHT 3
+#define DOWN  180
+#define LEFT  90
+#define RIGHT 270
 
-// Variáveis auxiliares no movimento da cobra
-int actualDirection = RIGHT;
-float lastTimeUpDown = 0.0;
-float lastTimeLeftRight = 0.0;
-float timeWhenChangeDirectionUp = 0.0;
-float timeWhenChangeDirectionDown = 0.0;
-float timeWhenChangeDirectionRight = 0.0;
-float timeWhenChangeDirectionLeft = 0.0;
+#define SNAKE_INITIAL_SPEED 0.01
+#define SNAKE_INITIAL_POSITION_X  0
+//no initial snake y position, because it only moves over the plane which has fixed y
+#define SNAKE_INITIAL_POSITION_Z  0.07
+
+struct GameElement
+{
+    glm::vec3 position = glm::vec3(0,0,0);
+    glm::vec3 scale = glm::vec3(1, 1, 1); //default is original scale
+};
+
+struct Snake
+{
+    GameElement ge;
+    float speed = SNAKE_INITIAL_SPEED;
+    int direction = UP;
+};
+
+Snake snake;
+GameElement fruit;
 
 int main(int argc, char* argv[])
 {
@@ -317,8 +326,15 @@ int main(int argc, char* argv[])
 
     // Posição X e Y em relação ao tabuleiro da posição inicial da fruta
     srand((unsigned)time(NULL));
-    float fruitPositionX = ((float)(rand() % 184) / 100) - 0.92;
-    float fruitPositionY = ((float)(rand() % 184) / 100) - 0.92;
+    fruit.position.x = ((float)(rand() % 184) / 100) - 0.92;
+    fruit.position.y = -1;
+    fruit.position.z = ((float)(rand() % 184) / 100) - 0.92;
+    fruit.scale = glm::vec3 (0.08, 0.08, 0.08);
+
+    snake.ge.position.x = SNAKE_INITIAL_POSITION_X;
+    snake.ge.position.y = -1;
+    snake.ge.position.z = SNAKE_INITIAL_POSITION_Z;
+    snake.ge.scale = glm::vec3 (0.04, 0.04, 0.04);
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -402,46 +418,49 @@ int main(int argc, char* argv[])
         #define FRUIT  1
         #define SNAKE_HEAD 2
 
-        if (actualDirection == UP) {
-            timeWhenChangeDirectionRight = (float)glfwGetTime()*5.0f/5 - leftRightTranslate;
-            timeWhenChangeDirectionLeft = (float)glfwGetTime()*5.0f/5 + leftRightTranslate;
-            upDownTranslate = -(float)glfwGetTime()*5.0f/5 + timeWhenChangeDirectionUp;
+
+        float isTurning = 0;
+
+        if (snake.direction == UP) {
+            snake.ge.position.z -= snake.speed;
         }
 
-        if (actualDirection == DOWN) {
-            timeWhenChangeDirectionRight = (float)glfwGetTime()*5.0f/5 - leftRightTranslate;
-            timeWhenChangeDirectionLeft = (float)glfwGetTime()*5.0f/5 + leftRightTranslate;
-            upDownTranslate = (float)glfwGetTime()*5.0f/5 - timeWhenChangeDirectionDown;
+        if (snake.direction == DOWN) {
+            snake.ge.position.z += snake.speed;
         }
 
-        if (actualDirection == LEFT) {
-            timeWhenChangeDirectionUp = (float)glfwGetTime()*5.0f/5 + upDownTranslate;
-            timeWhenChangeDirectionDown = (float)glfwGetTime()*5.0f/5 - upDownTranslate;
-            leftRightTranslate = -(float)glfwGetTime()*5.0f/5 + timeWhenChangeDirectionLeft;
+        if (snake.direction == LEFT) {
+            snake.ge.position.x -= snake.speed;
         }
 
-        if (actualDirection == RIGHT) {
-            timeWhenChangeDirectionUp = (float)glfwGetTime()*5.0f/5 + upDownTranslate;
-            timeWhenChangeDirectionDown = (float)glfwGetTime()*5.0f/5 - upDownTranslate;
-            leftRightTranslate = (float)glfwGetTime()*5.0f/5 - timeWhenChangeDirectionRight;
+        if (snake.direction == RIGHT) {
+            snake.ge.position.x += snake.speed;
         }
+
+        printf("snake position:  (%f, %f, %f) \n", snake.ge.position.x, snake.ge.position.y, snake.ge.position.z);
+        printf("snake direction: %i \n", snake.direction);
+        printf("snake speed: %f \n", snake.speed);
+        printf("fruit position: (%f, %f, %f) \n", fruit.position.x, fruit.position.y, fruit.position.z);
+
 
         // Desenhamos o modelo da esfera
-        model = Matrix_Translate(0.0,-1,0.07)
-              * Matrix_Scale(0.08, 0.08, 0.08)
-              * Matrix_Translate(leftRightTranslate, 0, upDownTranslate);
+        model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z/*snake.ge.position.x, snake.ge.position.y, snake.ge.position.z*/)
+              //* Matrix_Rotate_Y(headAngle)
+              //* Matrix_Translate(0.0,-1,0.07)
+              * Matrix_Scale(snake.ge.scale.x, snake.ge.scale.y, snake.ge.scale.z);
+              //* Matrix_Translate(0, -3, snake.ge.position.z);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, SNAKE_HEAD);
         DrawVirtualObject("snake_head");
 
         // Nesse condicional vamos testar a colisão, se colidiu cria nova posição pra fruta
         if (false){
-            fruitPositionX = ((float)(rand() % 184) / 100) - 0.92;
-            fruitPositionY = ((float)(rand() % 184) / 100) - 0.92;
+            fruit.position.x = ((float)(rand() % 184) / 100) - 0.92;
+            fruit.position.z = ((float)(rand() % 184) / 100) - 0.92;
         }
 
-        model = Matrix_Translate(fruitPositionX,-1,fruitPositionY)
-            * Matrix_Scale(0.08, 0.08, 0.08)
+        model = Matrix_Translate(fruit.position.x,fruit.position.y,fruit.position.z)
+            * Matrix_Scale(fruit.scale.x, fruit.scale.y, fruit.scale.z)
             * Matrix_Rotate_Y((float)glfwGetTime() * 0.1f)
             * Matrix_Translate(0, sin((float)glfwGetTime()*5.0f)/5, 0);
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
@@ -1250,27 +1269,27 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     }
 
     // Se o usuário apertar a tecla A, movemos a cobra para a esquerda.
-    if (key == GLFW_KEY_A && action == GLFW_PRESS && actualDirection != RIGHT)
+    if (key == GLFW_KEY_A && action == GLFW_PRESS && snake.direction != RIGHT)
     {
-        actualDirection = LEFT;
+        snake.direction = LEFT;
     }
 
     // Se o usuário apertar a tecla D, movemos a cobra para a direita.
-    if (key == GLFW_KEY_D && action == GLFW_PRESS && actualDirection != LEFT)
+    if (key == GLFW_KEY_D && action == GLFW_PRESS && snake.direction != LEFT)
     {
-        actualDirection = RIGHT;
+        snake.direction = RIGHT;
     }
 
     // Se o usuário apertar a tecla W, movemos a cobra para cima.
-    if (key == GLFW_KEY_W && action == GLFW_PRESS && actualDirection != DOWN)
+    if (key == GLFW_KEY_W && action == GLFW_PRESS && snake.direction != DOWN)
     {
-        actualDirection = UP;
+        snake.direction = UP;
     }
 
         // Se o usuário apertar a tecla S, movemos a cobra para baixo.
-    if (key == GLFW_KEY_S && action == GLFW_PRESS && actualDirection != UP)
+    if (key == GLFW_KEY_S && action == GLFW_PRESS && snake.direction != UP)
     {
-        actualDirection = DOWN;
+        snake.direction = DOWN;
     }
 }
 
