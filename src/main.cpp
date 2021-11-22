@@ -110,6 +110,8 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+float degreesToRadians( float degrees);
+
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
 struct SceneObject
@@ -312,7 +314,6 @@ int main(int argc, char* argv[])
     snake.ge.position.y = -1;
     snake.ge.position.z = SNAKE_INITIAL_POSITION_Z;
     snake.ge.scale = glm::vec3 (0.04, 0.04, 0.04);
-    float snakeRotation = 0.0f;
 
     float oldTime = trunc(100 * (float)glfwGetTime()) / 100;
 
@@ -399,39 +400,34 @@ int main(int argc, char* argv[])
         #define SNAKE_HEAD 2
 
 
-        float isTurning = 0;
         float actualTime = trunc(100 * (float)glfwGetTime()) / 100;
 
         if (snake.direction == UP) {
-            snakeRotation = 0.0f;
-            if (oldTime != actualTime){
-                oldTime = actualTime;
-                snake.ge.position.z -= snake.speed;
-            }
+          if (oldTime != actualTime){
+              oldTime = actualTime;
+              snake.ge.position.z -= snake.speed;
+          }
         }
 
         if (snake.direction == DOWN) {
-            snakeRotation = 3.14159f;
-            if (oldTime != actualTime){
-                oldTime = actualTime;
-                snake.ge.position.z += snake.speed;
-            }
+          if (oldTime != actualTime){
+              oldTime = actualTime;
+              snake.ge.position.z += snake.speed;
+          }
         }
 
         if (snake.direction == LEFT) {
-            snakeRotation = 1.5708f;
-            if (oldTime != actualTime){
-                oldTime = actualTime;
-                snake.ge.position.x -= snake.speed;
-            }
+          if (oldTime != actualTime){
+              oldTime = actualTime;
+              snake.ge.position.x -= snake.speed;
+          }
         }
 
         if (snake.direction == RIGHT) {
-            snakeRotation = -1.5708f;
-            if (oldTime != actualTime){
-                oldTime = actualTime;
-                snake.ge.position.x += snake.speed;
-            }
+          if (oldTime != actualTime){
+              oldTime = actualTime;
+              snake.ge.position.x += snake.speed;
+          }
         }
 
         #ifdef DEBUG
@@ -446,7 +442,7 @@ int main(int argc, char* argv[])
         // Desenhamos o modelo da cobra
         model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z)
               * Matrix_Scale(snake.ge.scale.x, snake.ge.scale.y, snake.ge.scale.z)
-              * Matrix_Rotate_Y(snakeRotation);
+              * Matrix_Rotate_Y(degreesToRadians(snake.direction));
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, SNAKE_HEAD);
         DrawVirtualObject("snake_head");
@@ -515,6 +511,10 @@ int main(int argc, char* argv[])
 
     // Fim do programa
     return 0;
+}
+
+float degreesToRadians( float degrees) {
+    return degrees/180 * M_PI;
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
