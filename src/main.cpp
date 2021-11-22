@@ -32,6 +32,8 @@
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 #include "matrices.h"
+#include "snak3d.h"
+#include "collisions.h"
 
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
@@ -180,32 +182,6 @@ GLint bbox_max_uniform;
 
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
-
-#define TITLE "SNAK3D"
-
-// Direções em que a cobra estará se movimentando
-#define UP    0
-#define DOWN  180
-#define LEFT  90
-#define RIGHT 270
-
-#define SNAKE_INITIAL_SPEED 0.01
-#define SNAKE_INITIAL_POSITION_X  0
-//no initial snake y position, because it only moves over the plane which has fixed y
-#define SNAKE_INITIAL_POSITION_Z  0.07
-
-struct GameElement
-{
-    glm::vec3 position = glm::vec3(0,0,0);
-    glm::vec3 scale = glm::vec3(1, 1, 1); //default is original scale
-};
-
-struct Snake
-{
-    GameElement ge;
-    float speed = SNAKE_INITIAL_SPEED;
-    int direction = UP;
-};
 
 Snake snake;
 GameElement fruit;
@@ -440,21 +416,20 @@ int main(int argc, char* argv[])
         printf("snake position:  (%f, %f, %f) \n", snake.ge.position.x, snake.ge.position.y, snake.ge.position.z);
         printf("snake direction: %i \n", snake.direction);
         printf("snake speed: %f \n", snake.speed);
+        printf("snake bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", snake.ge.bbox_min.x, snake.ge.bbox_min.y, snake.ge.bbox_min.z, snake.ge.bbox_max.x, snake.ge.bbox_max.y, snake.ge.bbox_max.z);
         printf("fruit position: (%f, %f, %f) \n", fruit.position.x, fruit.position.y, fruit.position.z);
+        printf("fruit bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", fruit.bbox_min.x, fruit.bbox_min.y, fruit.bbox_min.z, fruit.bbox_max.x, fruit.bbox_max.y, fruit.bbox_max.z);
 
 
         // Desenhamos o modelo da esfera
-        model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z/*snake.ge.position.x, snake.ge.position.y, snake.ge.position.z*/)
-              //* Matrix_Rotate_Y(headAngle)
-              //* Matrix_Translate(0.0,-1,0.07)
+        model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z)
               * Matrix_Scale(snake.ge.scale.x, snake.ge.scale.y, snake.ge.scale.z);
-              //* Matrix_Translate(0, -3, snake.ge.position.z);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, SNAKE_HEAD);
         DrawVirtualObject("snake_head");
 
         // Nesse condicional vamos testar a colisão, se colidiu cria nova posição pra fruta
-        if (false){
+        if (checkCubeCubeCollision(snake.ge, fruit)){
             fruit.position.x = ((float)(rand() % 184) / 100) - 0.92;
             fruit.position.z = ((float)(rand() % 184) / 100) - 0.92;
         }
@@ -565,6 +540,16 @@ void LoadTextureImage(const char* filename)
     g_NumLoadedTextures += 1;
 }
 
+void assignSnakeBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max) {
+  snake.ge.bbox_min = bbox_min;
+  snake.ge.bbox_max = bbox_max;
+}
+
+void assignFruitBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max) {
+  fruit.bbox_min = bbox_min;
+  fruit.bbox_max = bbox_max;
+}
+
 // Função que desenha um objeto armazenado em g_VirtualScene. Veja definição
 // dos objetos na função BuildTrianglesAndAddToVirtualScene().
 void DrawVirtualObject(const char* object_name)
@@ -580,6 +565,12 @@ void DrawVirtualObject(const char* object_name)
     glm::vec3 bbox_max = g_VirtualScene[object_name].bbox_max;
     glUniform4f(bbox_min_uniform, bbox_min.x, bbox_min.y, bbox_min.z, 1.0f);
     glUniform4f(bbox_max_uniform, bbox_max.x, bbox_max.y, bbox_max.z, 1.0f);
+    if(strcmp(object_name, "snake_head") == 0) {
+      assignSnakeBBOX(bbox_min, bbox_max);
+    }
+    if(strcmp(object_name, "fruit") == 0) {
+      assignFruitBBOX(bbox_min, bbox_max);
+    }
 
     // Pedimos para a GPU rasterizar os vértices dos eixos XYZ
     // apontados pelo VAO como linhas. Veja a definição de
