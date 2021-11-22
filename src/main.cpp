@@ -99,6 +99,7 @@ void TextRendering_ShowModelViewProjection(GLFWwindow* window, glm::mat4 project
 void TextRendering_ShowEulerAngles(GLFWwindow* window);
 void TextRendering_ShowProjection(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
+void TextRendering_ShowScore(GLFWwindow* window);
 
 // Funções callback para comunicação com o sistema operacional e interação do
 // usuário. Veja mais comentários nas definições das mesmas, abaixo.
@@ -185,6 +186,8 @@ GLuint g_NumLoadedTextures = 0;
 
 Snake snake;
 GameElement fruit;
+
+int score = 0;
 
 int main(int argc, char* argv[])
 {
@@ -421,7 +424,7 @@ int main(int argc, char* argv[])
         printf("fruit bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", fruit.bbox_min.x, fruit.bbox_min.y, fruit.bbox_min.z, fruit.bbox_max.x, fruit.bbox_max.y, fruit.bbox_max.z);
 
 
-        // Desenhamos o modelo da esfera
+        // Desenhamos o modelo da cobra
         model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z)
               * Matrix_Scale(snake.ge.scale.x, snake.ge.scale.y, snake.ge.scale.z);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -429,7 +432,9 @@ int main(int argc, char* argv[])
         DrawVirtualObject("snake_head");
 
         // Nesse condicional vamos testar a colisão, se colidiu cria nova posição pra fruta
+        // e incrementa 1 ao score
         if (checkCubeCubeCollision(snake.ge, fruit)){
+            score++;
             fruit.position.x = ((float)(rand() % 184) / 100) - 0.92;
             fruit.position.z = ((float)(rand() % 184) / 100) - 0.92;
         }
@@ -465,6 +470,9 @@ int main(int argc, char* argv[])
         // Imprimimos na tela informação sobre o número de quadros renderizados
         // por segundo (frames per second).
         TextRendering_ShowFramesPerSecond(window);
+
+        // Imprimimos na tela informação sobre o score atual do jogador
+        TextRendering_ShowScore(window);
 
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
@@ -1416,6 +1424,20 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
     float charwidth = TextRendering_CharWidth(window);
 
     TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0f-lineheight, 1.0f);
+}
+
+// Escrevemos na tela o score do jogador.
+void TextRendering_ShowScore(GLFWwindow* window)
+{
+    if ( !g_ShowInfoText )
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+
+    char buffer[80];
+    snprintf(buffer, 80, "Score: %d", score);
+
+    TextRendering_PrintString(window, buffer, -1.0f+pad/10, 0.95f+2*pad/10, 1.0f);
 }
 
 // Função para debugging: imprime no terminal todas informações de um modelo
