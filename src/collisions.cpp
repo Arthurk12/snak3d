@@ -12,15 +12,15 @@ bool checkCubeCubeCollision(GameElement cube1,GameElement cube2) {
     cube1.bbox_max*=cube1.scale;
     cube2.bbox_min*=cube2.scale;
     cube2.bbox_max*=cube2.scale;
-    float cube1MinPositionX = std::abs(cube1.position.x) - std::abs(cube1.bbox_min.x);
-    float cube1MaxPositionX = std::abs(cube1.position.x) + std::abs(cube1.bbox_max.x);
-    float cube1MinPositionZ = std::abs(cube1.position.z) - std::abs(cube1.bbox_min.z);
-    float cube1MaxPositionZ = std::abs(cube1.position.z) + std::abs(cube1.bbox_max.z);
+    float cube1MinPositionX = cube1.position.x - std::abs(cube1.bbox_min.x);
+    float cube1MaxPositionX = cube1.position.x + std::abs(cube1.bbox_max.x);
+    float cube1MinPositionZ = cube1.position.z - std::abs(cube1.bbox_min.z);
+    float cube1MaxPositionZ = cube1.position.z + std::abs(cube1.bbox_max.z);
 
-    float cube2MinPositionX = std::abs(cube2.position.x) - std::abs(cube2.bbox_min.x);
-    float cube2MaxPositionX = std::abs(cube2.position.x) + std::abs(cube2.bbox_max.x);
-    float cube2MinPositionZ = std::abs(cube2.position.z) - std::abs(cube2.bbox_min.z);
-    float cube2MaxPositionZ = std::abs(cube2.position.z) + std::abs(cube2.bbox_max.z);
+    float cube2MinPositionX = cube2.position.x - std::abs(cube2.bbox_min.x);
+    float cube2MaxPositionX = cube2.position.x + std::abs(cube2.bbox_max.x);
+    float cube2MinPositionZ = cube2.position.z - std::abs(cube2.bbox_min.z);
+    float cube2MaxPositionZ = cube2.position.z + std::abs(cube2.bbox_max.z);
 
     printf("                                               \n");
     printf(" %f < %f    %d \n", cube1MinPositionX,  cube2MaxPositionX,  cube1MinPositionX < cube2MaxPositionX);
