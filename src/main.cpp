@@ -99,7 +99,7 @@ void TextRendering_ShowModelViewProjection(GLFWwindow* window, glm::mat4 project
 void TextRendering_ShowEulerAngles(GLFWwindow* window);
 void TextRendering_ShowProjection(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
-void TextRendering_ShowScore(GLFWwindow* window);
+void TextRendering_ShowScore(GLFWwindow* window, Snake *s);
 
 // Funções callback para comunicação com o sistema operacional e interação do
 // usuário. Veja mais comentários nas definições das mesmas, abaixo.
@@ -186,8 +186,6 @@ GLuint g_NumLoadedTextures = 0;
 
 Snake snake;
 GameElement fruit;
-
-int score = 0;
 
 int main(int argc, char* argv[])
 {
@@ -314,6 +312,9 @@ int main(int argc, char* argv[])
     snake.ge.position.y = -1;
     snake.ge.position.z = SNAKE_INITIAL_POSITION_Z;
     snake.ge.scale = glm::vec3 (0.04, 0.04, 0.04);
+    float snakeRotation = 0.0f;
+
+    float oldTime = trunc(100 * (float)glfwGetTime()) / 100;
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -399,21 +400,38 @@ int main(int argc, char* argv[])
 
 
         float isTurning = 0;
+        float actualTime = trunc(100 * (float)glfwGetTime()) / 100;
 
         if (snake.direction == UP) {
-            snake.ge.position.z -= snake.speed;
+            snakeRotation = 0.0f;
+            if (oldTime != actualTime){
+                oldTime = actualTime;
+                snake.ge.position.z -= snake.speed;
+            }
         }
 
         if (snake.direction == DOWN) {
-            snake.ge.position.z += snake.speed;
+            snakeRotation = 3.14159f;
+            if (oldTime != actualTime){
+                oldTime = actualTime;
+                snake.ge.position.z += snake.speed;
+            }
         }
 
         if (snake.direction == LEFT) {
-            snake.ge.position.x -= snake.speed;
+            snakeRotation = 1.5708f;
+            if (oldTime != actualTime){
+                oldTime = actualTime;
+                snake.ge.position.x -= snake.speed;
+            }
         }
 
         if (snake.direction == RIGHT) {
-            snake.ge.position.x += snake.speed;
+            snakeRotation = -1.5708f;
+            if (oldTime != actualTime){
+                oldTime = actualTime;
+                snake.ge.position.x += snake.speed;
+            }
         }
 
         printf("snake position:  (%f, %f, %f) \n", snake.ge.position.x, snake.ge.position.y, snake.ge.position.z);
@@ -426,7 +444,8 @@ int main(int argc, char* argv[])
 
         // Desenhamos o modelo da cobra
         model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z)
-              * Matrix_Scale(snake.ge.scale.x, snake.ge.scale.y, snake.ge.scale.z);
+              * Matrix_Scale(snake.ge.scale.x, snake.ge.scale.y, snake.ge.scale.z)
+              * Matrix_Rotate_Y(snakeRotation);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, SNAKE_HEAD);
         DrawVirtualObject("snake_head");
@@ -434,7 +453,8 @@ int main(int argc, char* argv[])
         // Nesse condicional vamos testar a colisão, se colidiu cria nova posição pra fruta
         // e incrementa 1 ao score
         if (checkCubeCubeCollision(snake.ge, fruit)){
-            score++;
+            snake.ge.score++;
+            snake.speed += 0.0005;
             fruit.position.x = ((float)(rand() % 184) / 100) - 0.92;
             fruit.position.z = ((float)(rand() % 184) / 100) - 0.92;
         }
@@ -472,7 +492,7 @@ int main(int argc, char* argv[])
         TextRendering_ShowFramesPerSecond(window);
 
         // Imprimimos na tela informação sobre o score atual do jogador
-        TextRendering_ShowScore(window);
+        TextRendering_ShowScore(window, &snake);
 
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
@@ -1427,7 +1447,7 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
 }
 
 // Escrevemos na tela o score do jogador.
-void TextRendering_ShowScore(GLFWwindow* window)
+void TextRendering_ShowScore(GLFWwindow* window, Snake *s)
 {
     if ( !g_ShowInfoText )
         return;
@@ -1435,7 +1455,7 @@ void TextRendering_ShowScore(GLFWwindow* window)
     float pad = TextRendering_LineHeight(window);
 
     char buffer[80];
-    snprintf(buffer, 80, "Score: %d", score);
+    snprintf(buffer, 80, "Score: %d", s->ge.score);
 
     TextRendering_PrintString(window, buffer, -1.0f+pad/10, 0.95f+2*pad/10, 1.0f);
 }

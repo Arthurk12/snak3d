@@ -14,7 +14,7 @@
 #define LEFT  90
 #define RIGHT 270
 
-#define SNAKE_INITIAL_SPEED 0.01
+#define SNAKE_INITIAL_SPEED 0.005
 #define SNAKE_INITIAL_POSITION_X  0
 //no initial snake y position, because it only moves over the plane which has fixed y
 #define SNAKE_INITIAL_POSITION_Z  0.07
@@ -25,6 +25,7 @@ struct GameElement
     glm::vec3 scale = glm::vec3(1, 1, 1); //default is original scale
     glm::vec3    bbox_min; // Axis-Aligned Bounding Box do objeto
     glm::vec3    bbox_max;
+    int score = 0;
 };
 
 struct Snake
