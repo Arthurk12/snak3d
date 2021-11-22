@@ -277,23 +277,20 @@ int main(int argc, char* argv[])
     // Carregamos duas imagens para serem utilizadas como textura
     LoadTextureImage("../../data/chessPattern.png");        // TextureImage0
     LoadTextureImage("../../data/fruit_texture.jpeg");      // TextureImage1
+    LoadTextureImage("../../data/snake_texture.jpeg");      // TextureImage2
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
-    ObjModel spheremodel("../../data/sphere.obj");
-    ComputeNormals(&spheremodel);
-    BuildTrianglesAndAddToVirtualScene(&spheremodel);
+    ObjModel planeModel("../../data/plane.obj");
+    ComputeNormals(&planeModel);
+    BuildTrianglesAndAddToVirtualScene(&planeModel);
 
-    ObjModel fruitmodel("../../data/fruit.obj");
-    ComputeNormals(&fruitmodel);
-    BuildTrianglesAndAddToVirtualScene(&fruitmodel);
+    ObjModel snakeHeadModel("../../data/snake_head.obj");
+    ComputeNormals(&snakeHeadModel);
+    BuildTrianglesAndAddToVirtualScene(&snakeHeadModel);
 
-    ObjModel bunnymodel("../../data/bunny.obj");
-    ComputeNormals(&bunnymodel);
-    BuildTrianglesAndAddToVirtualScene(&bunnymodel);
-
-    ObjModel planemodel("../../data/plane.obj");
-    ComputeNormals(&planemodel);
-    BuildTrianglesAndAddToVirtualScene(&planemodel);
+    ObjModel fruitModel("../../data/fruit.obj");
+    ComputeNormals(&fruitModel);
+    BuildTrianglesAndAddToVirtualScene(&fruitModel);
 
     if ( argc > 1 )
     {
@@ -401,10 +398,9 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        #define SPHERE 0
-        #define BUNNY  1
-        #define PLANE  2
-        #define FRUIT  3
+        #define PLANE  0
+        #define FRUIT  1
+        #define SNAKE_HEAD 2
 
         if (actualDirection == UP) {
             timeWhenChangeDirectionRight = (float)glfwGetTime()*5.0f/5 - leftRightTranslate;
@@ -435,15 +431,8 @@ int main(int argc, char* argv[])
               * Matrix_Scale(0.08, 0.08, 0.08)
               * Matrix_Translate(leftRightTranslate, 0, upDownTranslate);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SPHERE);
-        DrawVirtualObject("sphere");
-
-        // Desenhamos o modelo do coelho
-        /*model = Matrix_Translate(1.0f,0.0f,0.0f);
-              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, BUNNY);
-        DrawVirtualObject("bunny");*/
+        glUniform1i(object_id_uniform, SNAKE_HEAD);
+        DrawVirtualObject("snake_head");
 
         // Nesse condicional vamos testar a colisão, se colidiu cria nova posição pra fruta
         if (false){

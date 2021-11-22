@@ -19,10 +19,9 @@ uniform mat4 view;
 uniform mat4 projection;
 
 // Identificador que define qual objeto está sendo desenhado no momento
-#define SPHERE 0
-#define BUNNY  1
-#define PLANE  2
-#define FRUIT  3
+#define PLANE  0
+#define FRUIT  1
+#define SNAKE_HEAD 2
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -98,6 +97,22 @@ void main()
         U = (theta + M_PI  ) / (2*M_PI);
         V = (phi   + M_PI/2) / M_PI;
         textureColor = texture(TextureImage1, vec2(U,V)).rgb;
+    }
+    else if (object_id == SNAKE_HEAD) {
+        float minx = bbox_min.x;
+        float maxx = bbox_max.x;
+
+        float miny = bbox_min.y;
+        float maxy = bbox_max.y;
+
+        float minz = bbox_min.z;
+        float maxz = bbox_max.z;
+
+        float texture_x = (position_model.x - minx) / (maxx-minx);
+        float texture_y = (position_model.y - miny) / (maxy-miny);
+        U = texture_x;
+        V = texture_y;
+        textureColor = texture(TextureImage2, vec2(U,V)).rgb;
     }
     /*else if ( object_id == BUNNY )
     {*/
