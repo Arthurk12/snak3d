@@ -434,13 +434,14 @@ int main(int argc, char* argv[])
             }
         }
 
+        #ifdef DEBUG
         printf("snake position:  (%f, %f, %f) \n", snake.ge.position.x, snake.ge.position.y, snake.ge.position.z);
         printf("snake direction: %i \n", snake.direction);
         printf("snake speed: %f \n", snake.speed);
         printf("snake bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", snake.ge.bbox_min.x, snake.ge.bbox_min.y, snake.ge.bbox_min.z, snake.ge.bbox_max.x, snake.ge.bbox_max.y, snake.ge.bbox_max.z);
         printf("fruit position: (%f, %f, %f) \n", fruit.position.x, fruit.position.y, fruit.position.z);
         printf("fruit bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", fruit.bbox_min.x, fruit.bbox_min.y, fruit.bbox_min.z, fruit.bbox_max.x, fruit.bbox_max.y, fruit.bbox_max.z);
-
+        #endif // DEBUG
 
         // Desenhamos o modelo da cobra
         model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z)

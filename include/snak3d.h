@@ -6,6 +6,8 @@
 #include <glm/vec4.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+//#define DEBUG
+
 #define TITLE "SNAK3D"
 
 // Direções em que a cobra estará se movimentando

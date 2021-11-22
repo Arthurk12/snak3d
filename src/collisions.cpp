@@ -22,12 +22,14 @@ bool checkCubeCubeCollision(GameElement cube1,GameElement cube2) {
     float cube2MinPositionZ = cube2.position.z - std::abs(cube2.bbox_min.z);
     float cube2MaxPositionZ = cube2.position.z + std::abs(cube2.bbox_max.z);
 
+    #ifdef DEBUG
     printf("                                               \n");
     printf(" %f < %f    %d \n", cube1MinPositionX,  cube2MaxPositionX,  cube1MinPositionX < cube2MaxPositionX);
     printf(" %f > %f    %d \n", cube1MaxPositionX,  cube2MinPositionX,  cube1MaxPositionX > cube2MinPositionX);
     printf(" %f < %f    %d \n", cube1MaxPositionZ,  cube2MinPositionZ,  cube1MaxPositionZ < cube2MinPositionZ);
     printf(" %f > %f    %d \n", cube1MinPositionZ,  cube2MaxPositionZ,  cube1MinPositionZ > cube2MaxPositionZ);
     printf("                                               \n");
+    #endif
 
     if (cube1MinPositionX < cube2MaxPositionX &&
         cube1MaxPositionX > cube2MinPositionX &&
