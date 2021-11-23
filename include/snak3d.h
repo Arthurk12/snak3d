@@ -38,6 +38,7 @@ struct GameElement
     glm::vec3    bbox_max;
     int score = 0;
     bool paused = false;
+    bool finished = false;
 };
 
 struct Snake

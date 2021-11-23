@@ -101,6 +101,9 @@ void TextRendering_ShowProjection(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
 void TextRendering_ShowScore(GLFWwindow* window, Snake *s);
 void TextRendering_ShowPause(GLFWwindow* window);
+void TextRendering_ShowFinalScore(GLFWwindow* window);
+void TextRendering_ShowGameOver(GLFWwindow* window);
+void TextRendering_ShowRestartGameMessage(GLFWwindow* window);
 void TextRendering_ShowInstructions(GLFWwindow* window);
 
 // Funções callback para comunicação com o sistema operacional e interação do
@@ -114,6 +117,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 float degreesToRadians( float degrees);
 void resetGame();
+void finishGame();
 void assignSnakeBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max);
 void assignFruitBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max);
 void assignBottomSideBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max);
@@ -432,7 +436,17 @@ int main(int argc, char* argv[])
 
         float actualTime = trunc(100 * (float)glfwGetTime()) / 100;
 
-        if (!snake.ge.paused){
+        if(snake.ge.finished){
+            // Imprimimos na tela o score final
+            TextRendering_ShowFinalScore(window);
+
+            // Imprimimos na tela mensagem de fim de jogo
+            TextRendering_ShowGameOver(window);
+
+            // Imprimimos na tela instrução para reiniciar o jogo
+            TextRendering_ShowRestartGameMessage(window);
+        }
+        else if (!snake.ge.paused){
             if (snake.direction == UP) {
               if (oldTime != actualTime){
                   oldTime = actualTime;
@@ -471,19 +485,19 @@ int main(int argc, char* argv[])
             #endif // DEBUG
             printf("BOTTOM\n");
             if(checkCubePlaneCollision(snake.ge, sides[0])){
-                resetGame();
+                finishGame();
             }
             printf("LEFT\n");
             if(checkCubePlaneCollision(snake.ge, sides[1])){
-                resetGame();
+                finishGame();
             }
             printf("TOP\n");
             if(checkCubePlaneCollision(snake.ge, sides[2])){
-                resetGame();
+                finishGame();
             }
             printf("RIGHT\n");
             if(checkCubePlaneCollision(snake.ge, sides[3])){
-                resetGame();
+                finishGame();
             }
 
             // Desenhamos o modelo da cobra
@@ -608,10 +622,14 @@ float degreesToRadians( float degrees) {
     return degrees/180 * M_PI;
 }
 
-void resetGame () {
+void resetGame() {
     snake.ge.score = 0;
     snake.direction = UP;
     snake.ge.position = glm::vec3(SNAKE_INITIAL_POSITION_X, -1, SNAKE_INITIAL_POSITION_Z);
+}
+
+void finishGame() {
+    snake.ge.finished = true;
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
@@ -1426,9 +1444,16 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     }
 
     // Se o usuário apertar a tecla P, o jogo é pausado.
-    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+    if (key == GLFW_KEY_P && action == GLFW_PRESS && !snake.ge.finished)
     {
         snake.ge.paused = !snake.ge.paused;
+    }
+
+    // Se o usuário apertar a tecla Espaço, o jogo é reiniciado.
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && snake.ge.finished)
+    {
+        snake.ge.finished = !snake.ge.finished;
+        resetGame();
     }
 }
 
@@ -1618,6 +1643,48 @@ void TextRendering_ShowInstructions(GLFWwindow* window)
     TextRendering_PrintString(window, bufferD, -0.3f+pad/10, 0.2f+2*pad/10, 1.0f);
     TextRendering_PrintString(window, bufferW, -0.3f+pad/10, 0.1f+2*pad/10, 1.0f);
     TextRendering_PrintString(window, bufferS, -0.3f+pad/10, 0.0f+2*pad/10, 1.0f);
+}
+
+// Escrevemos a pountação final ao perder o jogo
+void TextRendering_ShowFinalScore(GLFWwindow* window)
+{
+    if ( !g_ShowInfoText )
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+
+    char buffer[20];
+    snprintf(buffer, 20, "Final Score: %d", snake.ge.score);
+
+    TextRendering_PrintString(window, buffer, -0.1f+pad/10, 0.3f+2*pad/10, 1.0f);
+}
+
+// Escrevemos mensagem de fim de jogo
+void TextRendering_ShowGameOver(GLFWwindow* window)
+{
+    if ( !g_ShowInfoText )
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+
+    char buffer[20];
+    snprintf(buffer, 20, "GAME OVER");
+
+    TextRendering_PrintString(window, buffer, -0.05f+pad/10, 0.5f+2*pad/10, 1.0f);
+}
+
+// Escrevemos instrução para reiniciar jogo
+void TextRendering_ShowRestartGameMessage(GLFWwindow* window)
+{
+    if ( !g_ShowInfoText )
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+
+    char buffer[25];
+    snprintf(buffer, 25, "Press SPACE to continue");
+
+    TextRendering_PrintString(window, buffer, -0.2f+pad/10, 0.1f+2*pad/10, 1.0f);
 }
 
 // Função para debugging: imprime no terminal todas informações de um modelo
