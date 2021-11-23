@@ -28,6 +28,7 @@ struct GameElement
     glm::vec3    bbox_min; // Axis-Aligned Bounding Box do objeto
     glm::vec3    bbox_max;
     int score = 0;
+    bool paused = false;
 };
 
 struct Snake

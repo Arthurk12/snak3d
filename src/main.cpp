@@ -100,6 +100,8 @@ void TextRendering_ShowEulerAngles(GLFWwindow* window);
 void TextRendering_ShowProjection(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
 void TextRendering_ShowScore(GLFWwindow* window, Snake *s);
+void TextRendering_ShowPause(GLFWwindow* window);
+void TextRendering_ShowInstructions(GLFWwindow* window);
 
 // Funções callback para comunicação com o sistema operacional e interação do
 // usuário. Veja mais comentários nas definições das mesmas, abaixo.
@@ -402,91 +404,100 @@ int main(int argc, char* argv[])
 
         float actualTime = trunc(100 * (float)glfwGetTime()) / 100;
 
-        if (snake.direction == UP) {
-          if (oldTime != actualTime){
-              oldTime = actualTime;
-              snake.ge.position.z -= snake.speed;
-          }
+        if (!snake.ge.paused){
+            if (snake.direction == UP) {
+              if (oldTime != actualTime){
+                  oldTime = actualTime;
+                  snake.ge.position.z -= snake.speed;
+              }
+            }
+
+            if (snake.direction == DOWN) {
+              if (oldTime != actualTime){
+                  oldTime = actualTime;
+                  snake.ge.position.z += snake.speed;
+              }
+            }
+
+            if (snake.direction == LEFT) {
+              if (oldTime != actualTime){
+                  oldTime = actualTime;
+                  snake.ge.position.x -= snake.speed;
+              }
+            }
+
+            if (snake.direction == RIGHT) {
+              if (oldTime != actualTime){
+                  oldTime = actualTime;
+                  snake.ge.position.x += snake.speed;
+              }
+            }
+
+            #ifdef DEBUG
+            printf("snake position:  (%f, %f, %f) \n", snake.ge.position.x, snake.ge.position.y, snake.ge.position.z);
+            printf("snake direction: %i \n", snake.direction);
+            printf("snake speed: %f \n", snake.speed);
+            printf("snake bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", snake.ge.bbox_min.x, snake.ge.bbox_min.y, snake.ge.bbox_min.z, snake.ge.bbox_max.x, snake.ge.bbox_max.y, snake.ge.bbox_max.z);
+            printf("fruit position: (%f, %f, %f) \n", fruit.position.x, fruit.position.y, fruit.position.z);
+            printf("fruit bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", fruit.bbox_min.x, fruit.bbox_min.y, fruit.bbox_min.z, fruit.bbox_max.x, fruit.bbox_max.y, fruit.bbox_max.z);
+            #endif // DEBUG
+
+            // Desenhamos o modelo da cobra
+            model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z)
+                  * Matrix_Scale(snake.ge.scale.x, snake.ge.scale.y, snake.ge.scale.z)
+                  * Matrix_Rotate_Y(degreesToRadians(snake.direction));
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, SNAKE_HEAD);
+            DrawVirtualObject("snake_head");
+
+            // Nesse condicional vamos testar a colisão, se colidiu cria nova posição pra fruta
+            // e incrementa 1 ao score
+            if (checkCubeCubeCollision(snake.ge, fruit)){
+                snake.ge.score++;
+                snake.speed += 0.0005;
+                fruit.position.x = ((float)(rand() % 184) / 100) - 0.92;
+                fruit.position.z = ((float)(rand() % 184) / 100) - 0.92;
+            }
+
+            model = Matrix_Translate(fruit.position.x,fruit.position.y,fruit.position.z)
+                * Matrix_Scale(fruit.scale.x, fruit.scale.y, fruit.scale.z)
+                * Matrix_Rotate_Y((float)glfwGetTime() * 0.1f)
+                * Matrix_Translate(0, sin((float)glfwGetTime()*5.0f)/5, 0);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, FRUIT);
+            DrawVirtualObject("fruit");
+
+            // Desenhamos o plano do chão
+            model = Matrix_Translate(0.0f,-1.1f,0.0f);
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, PLANE);
+            DrawVirtualObject("plane");
+
+            // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
+            // passamos por todos os sistemas de coordenadas armazenados nas
+            // matrizes the_model, the_view, e the_projection; e escrevemos na tela
+            // as matrizes e pontos resultantes dessas transformações.
+            //glm::vec4 p_model(0.5f, 0.5f, 0.5f, 1.0f);
+            //TextRendering_ShowModelViewProjection(window, projection, view, model, p_model);
+
+            // Imprimimos na tela os ângulos de Euler que controlam a rotação do
+            // terceiro cubo.
+            TextRendering_ShowEulerAngles(window);
+
+            // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
+            TextRendering_ShowProjection(window);
+
+            // Imprimimos na tela informação sobre o número de quadros renderizados
+            // por segundo (frames per second).
+            TextRendering_ShowFramesPerSecond(window);
         }
+        else {
+            // Imprimimos na tela menu de pause
+            TextRendering_ShowPause(window);
 
-        if (snake.direction == DOWN) {
-          if (oldTime != actualTime){
-              oldTime = actualTime;
-              snake.ge.position.z += snake.speed;
-          }
+            // Imprimimos na tela instruções
+            TextRendering_ShowInstructions(window);
         }
-
-        if (snake.direction == LEFT) {
-          if (oldTime != actualTime){
-              oldTime = actualTime;
-              snake.ge.position.x -= snake.speed;
-          }
-        }
-
-        if (snake.direction == RIGHT) {
-          if (oldTime != actualTime){
-              oldTime = actualTime;
-              snake.ge.position.x += snake.speed;
-          }
-        }
-
-        #ifdef DEBUG
-        printf("snake position:  (%f, %f, %f) \n", snake.ge.position.x, snake.ge.position.y, snake.ge.position.z);
-        printf("snake direction: %i \n", snake.direction);
-        printf("snake speed: %f \n", snake.speed);
-        printf("snake bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", snake.ge.bbox_min.x, snake.ge.bbox_min.y, snake.ge.bbox_min.z, snake.ge.bbox_max.x, snake.ge.bbox_max.y, snake.ge.bbox_max.z);
-        printf("fruit position: (%f, %f, %f) \n", fruit.position.x, fruit.position.y, fruit.position.z);
-        printf("fruit bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", fruit.bbox_min.x, fruit.bbox_min.y, fruit.bbox_min.z, fruit.bbox_max.x, fruit.bbox_max.y, fruit.bbox_max.z);
-        #endif // DEBUG
-
-        // Desenhamos o modelo da cobra
-        model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z)
-              * Matrix_Scale(snake.ge.scale.x, snake.ge.scale.y, snake.ge.scale.z)
-              * Matrix_Rotate_Y(degreesToRadians(snake.direction));
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SNAKE_HEAD);
-        DrawVirtualObject("snake_head");
-
-        // Nesse condicional vamos testar a colisão, se colidiu cria nova posição pra fruta
-        // e incrementa 1 ao score
-        if (checkCubeCubeCollision(snake.ge, fruit)){
-            snake.ge.score++;
-            snake.speed += 0.0005;
-            fruit.position.x = ((float)(rand() % 184) / 100) - 0.92;
-            fruit.position.z = ((float)(rand() % 184) / 100) - 0.92;
-        }
-
-        model = Matrix_Translate(fruit.position.x,fruit.position.y,fruit.position.z)
-            * Matrix_Scale(fruit.scale.x, fruit.scale.y, fruit.scale.z)
-            * Matrix_Rotate_Y((float)glfwGetTime() * 0.1f)
-            * Matrix_Translate(0, sin((float)glfwGetTime()*5.0f)/5, 0);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, FRUIT);
-        DrawVirtualObject("fruit");
-
-        // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.1f,0.0f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, PLANE);
-        DrawVirtualObject("plane");
-
-        // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
-        // passamos por todos os sistemas de coordenadas armazenados nas
-        // matrizes the_model, the_view, e the_projection; e escrevemos na tela
-        // as matrizes e pontos resultantes dessas transformações.
-        //glm::vec4 p_model(0.5f, 0.5f, 0.5f, 1.0f);
-        //TextRendering_ShowModelViewProjection(window, projection, view, model, p_model);
-
-        // Imprimimos na tela os ângulos de Euler que controlam a rotação do
-        // terceiro cubo.
-        TextRendering_ShowEulerAngles(window);
-
-        // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
-        TextRendering_ShowProjection(window);
-
-        // Imprimimos na tela informação sobre o número de quadros renderizados
-        // por segundo (frames per second).
-        TextRendering_ShowFramesPerSecond(window);
 
         // Imprimimos na tela informação sobre o score atual do jogador
         TextRendering_ShowScore(window, &snake);
@@ -1226,90 +1237,98 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
-    // O código abaixo implementa a seguinte lógica:
-    //   Se apertar tecla X       então g_AngleX += delta;
-    //   Se apertar tecla shift+X então g_AngleX -= delta;
-    //   Se apertar tecla Y       então g_AngleY += delta;
-    //   Se apertar tecla shift+Y então g_AngleY -= delta;
-    //   Se apertar tecla Z       então g_AngleZ += delta;
-    //   Se apertar tecla shift+Z então g_AngleZ -= delta;
+    if (!snake.ge.paused){
+        // O código abaixo implementa a seguinte lógica:
+        //   Se apertar tecla X       então g_AngleX += delta;
+        //   Se apertar tecla shift+X então g_AngleX -= delta;
+        //   Se apertar tecla Y       então g_AngleY += delta;
+        //   Se apertar tecla shift+Y então g_AngleY -= delta;
+        //   Se apertar tecla Z       então g_AngleZ += delta;
+        //   Se apertar tecla shift+Z então g_AngleZ -= delta;
 
-    float delta = 3.141592 / 16; // 22.5 graus, em radianos.
+        float delta = 3.141592 / 16; // 22.5 graus, em radianos.
 
-    if (key == GLFW_KEY_X && action == GLFW_PRESS)
-    {
-        g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
+        if (key == GLFW_KEY_X && action == GLFW_PRESS)
+        {
+            g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
+        }
 
-    if (key == GLFW_KEY_Y && action == GLFW_PRESS)
-    {
-        g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-    {
-        g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
+        if (key == GLFW_KEY_Y && action == GLFW_PRESS)
+        {
+            g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
+        }
+        if (key == GLFW_KEY_Z && action == GLFW_PRESS)
+        {
+            g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
+        }
 
-    // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-    {
-        g_AngleX = 0.0f;
-        g_AngleY = 0.0f;
-        g_AngleZ = 0.0f;
-        g_ForearmAngleX = 0.0f;
-        g_ForearmAngleZ = 0.0f;
-        g_TorsoPositionX = 0.0f;
-        g_TorsoPositionY = 0.0f;
-    }
+        // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
+        if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+        {
+            g_AngleX = 0.0f;
+            g_AngleY = 0.0f;
+            g_AngleZ = 0.0f;
+            g_ForearmAngleX = 0.0f;
+            g_ForearmAngleZ = 0.0f;
+            g_TorsoPositionX = 0.0f;
+            g_TorsoPositionY = 0.0f;
+        }
 
-    // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
-    if (key == GLFW_KEY_P && action == GLFW_PRESS)
-    {
-        g_UsePerspectiveProjection = true;
-    }
+        // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
+        if (key == GLFW_KEY_P && action == GLFW_PRESS)
+        {
+            g_UsePerspectiveProjection = true;
+        }
 
-    // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
-    if (key == GLFW_KEY_O && action == GLFW_PRESS)
-    {
-        g_UsePerspectiveProjection = false;
-    }
+        // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
+        if (key == GLFW_KEY_O && action == GLFW_PRESS)
+        {
+            g_UsePerspectiveProjection = false;
+        }
 
-    // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
-    if (key == GLFW_KEY_H && action == GLFW_PRESS)
-    {
-        g_ShowInfoText = !g_ShowInfoText;
-    }
+        // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
+        if (key == GLFW_KEY_H && action == GLFW_PRESS)
+        {
+            g_ShowInfoText = !g_ShowInfoText;
+        }
 
-    // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
-    if (key == GLFW_KEY_R && action == GLFW_PRESS)
-    {
-        LoadShadersFromFiles();
-        fprintf(stdout,"Shaders recarregados!\n");
-        fflush(stdout);
-    }
+        // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
+        if (key == GLFW_KEY_R && action == GLFW_PRESS)
+        {
+            LoadShadersFromFiles();
+            fprintf(stdout,"Shaders recarregados!\n");
+            fflush(stdout);
+        }
 
-    // Se o usuário apertar a tecla A, movemos a cobra para a esquerda.
-    if (key == GLFW_KEY_A && action == GLFW_PRESS && snake.direction != RIGHT)
-    {
-        snake.direction = LEFT;
-    }
+        // Se o usuário apertar a tecla A, movemos a cobra para a esquerda.
+        if (key == GLFW_KEY_A && action == GLFW_PRESS && snake.direction != RIGHT)
+        {
+            snake.direction = LEFT;
+        }
 
-    // Se o usuário apertar a tecla D, movemos a cobra para a direita.
-    if (key == GLFW_KEY_D && action == GLFW_PRESS && snake.direction != LEFT)
-    {
-        snake.direction = RIGHT;
-    }
+        // Se o usuário apertar a tecla D, movemos a cobra para a direita.
+        if (key == GLFW_KEY_D && action == GLFW_PRESS && snake.direction != LEFT)
+        {
+            snake.direction = RIGHT;
+        }
 
-    // Se o usuário apertar a tecla W, movemos a cobra para cima.
-    if (key == GLFW_KEY_W && action == GLFW_PRESS && snake.direction != DOWN)
-    {
-        snake.direction = UP;
-    }
+        // Se o usuário apertar a tecla W, movemos a cobra para cima.
+        if (key == GLFW_KEY_W && action == GLFW_PRESS && snake.direction != DOWN)
+        {
+            snake.direction = UP;
+        }
 
         // Se o usuário apertar a tecla S, movemos a cobra para baixo.
-    if (key == GLFW_KEY_S && action == GLFW_PRESS && snake.direction != UP)
+        if (key == GLFW_KEY_S && action == GLFW_PRESS && snake.direction != UP)
+        {
+            snake.direction = DOWN;
+        }
+    }
+
+    // Se o usuário apertar a tecla P, o jogo é pausado.
+    if (key == GLFW_KEY_P && action == GLFW_PRESS)
     {
-        snake.direction = DOWN;
+        snake.ge.paused = !snake.ge.paused;
     }
 }
 
@@ -1459,6 +1478,46 @@ void TextRendering_ShowScore(GLFWwindow* window, Snake *s)
     snprintf(buffer, 80, "Score: %d", s->ge.score);
 
     TextRendering_PrintString(window, buffer, -1.0f+pad/10, 0.95f+2*pad/10, 1.0f);
+}
+
+// Escrevemos na tela de pause.
+void TextRendering_ShowPause(GLFWwindow* window)
+{
+    if ( !g_ShowInfoText )
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+
+    char buffer[80];
+    snprintf(buffer, 80, "Paused\n");
+
+    TextRendering_PrintString(window, buffer, -0.1f+pad/10, 0.5f+2*pad/10, 1.0f);
+}
+
+// Escrevemos as instruções na tela de pause.
+void TextRendering_ShowInstructions(GLFWwindow* window)
+{
+    if ( !g_ShowInfoText )
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+
+    char bufferP[20];
+    char bufferA[20];
+    char bufferD[20];
+    char bufferW[20];
+    char bufferS[20];
+    snprintf(bufferP, 20, "Press P to continue");
+    snprintf(bufferA, 20, "Move Left:  A");
+    snprintf(bufferD, 20, "Move Right: D");
+    snprintf(bufferW, 20, "Move Up:    W");
+    snprintf(bufferS, 20, "Move Down:  S");
+
+    TextRendering_PrintString(window, bufferP, -0.3f+pad/10, 0.4f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, bufferA, -0.3f+pad/10, 0.3f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, bufferD, -0.3f+pad/10, 0.2f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, bufferW, -0.3f+pad/10, 0.1f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, bufferS, -0.3f+pad/10, 0.0f+2*pad/10, 1.0f);
 }
 
 // Função para debugging: imprime no terminal todas informações de um modelo
