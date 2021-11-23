@@ -101,9 +101,8 @@ void TextRendering_ShowProjection(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
 void TextRendering_ShowScore(GLFWwindow* window, Snake *s);
 void TextRendering_ShowPause(GLFWwindow* window);
-void TextRendering_ShowFinalScore(GLFWwindow* window);
-void TextRendering_ShowGameOver(GLFWwindow* window);
-void TextRendering_ShowRestartGameMessage(GLFWwindow* window);
+void TextRendering_ShowFinalGame(GLFWwindow* window);
+void TextRendering_ShowStartGameMessage(GLFWwindow* window);
 void TextRendering_ShowInstructions(GLFWwindow* window);
 
 // Funções callback para comunicação com o sistema operacional e interação do
@@ -436,15 +435,14 @@ int main(int argc, char* argv[])
 
         float actualTime = trunc(100 * (float)glfwGetTime()) / 100;
 
-        if(snake.ge.finished){
-            // Imprimimos na tela o score final
-            TextRendering_ShowFinalScore(window);
+        if (!snake.ge.started) {
+            // Imprimimos na tela instrução para iniciar o jogo
+            TextRendering_ShowStartGameMessage(window);
+        }
+        else if(snake.ge.finished){
+            // Imprimimos na tela o menu de fim de jogo
+            TextRendering_ShowFinalGame(window);
 
-            // Imprimimos na tela mensagem de fim de jogo
-            TextRendering_ShowGameOver(window);
-
-            // Imprimimos na tela instrução para reiniciar o jogo
-            TextRendering_ShowRestartGameMessage(window);
         }
         else if (!snake.ge.paused){
             if (snake.direction == UP) {
@@ -1455,6 +1453,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         snake.ge.finished = !snake.ge.finished;
         resetGame();
     }
+
+    // Se o usuário apertar a tecla Espaço, o jogo é iniciado.
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !snake.ge.started)
+    {
+        snake.ge.started = !snake.ge.started;
+    }
 }
 
 // Definimos o callback para impressão de erros da GLFW no terminal
@@ -1645,46 +1649,41 @@ void TextRendering_ShowInstructions(GLFWwindow* window)
     TextRendering_PrintString(window, bufferS, -0.3f+pad/10, 0.0f+2*pad/10, 1.0f);
 }
 
-// Escrevemos a pountação final ao perder o jogo
-void TextRendering_ShowFinalScore(GLFWwindow* window)
+// Escrevemos o menu de final de jogo
+void TextRendering_ShowFinalGame(GLFWwindow* window)
 {
     if ( !g_ShowInfoText )
         return;
 
     float pad = TextRendering_LineHeight(window);
 
-    char buffer[20];
-    snprintf(buffer, 20, "Final Score: %d", snake.ge.score);
+    char bufferGameOver[20];
+    char bufferScore[20];
+    char bufferInstruction[25];
+    snprintf(bufferGameOver, 20, "GAME OVER");
+    snprintf(bufferScore, 20, "Final Score: %d", snake.ge.score);
+    snprintf(bufferInstruction, 25, "Press SPACE to continue");
 
-    TextRendering_PrintString(window, buffer, -0.1f+pad/10, 0.3f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, bufferGameOver, -0.05f+pad/10, 0.5f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, bufferScore, -0.1f+pad/10, 0.3f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, bufferInstruction, -0.2f+pad/10, 0.1f+2*pad/10, 1.0f);
 }
 
-// Escrevemos mensagem de fim de jogo
-void TextRendering_ShowGameOver(GLFWwindow* window)
+// Escrevemos instrução para iniciar jogo
+void TextRendering_ShowStartGameMessage(GLFWwindow* window)
 {
     if ( !g_ShowInfoText )
         return;
 
     float pad = TextRendering_LineHeight(window);
 
-    char buffer[20];
-    snprintf(buffer, 20, "GAME OVER");
+    char bufferWelcome[25];
+    char bufferInstruction[25];
+    snprintf(bufferWelcome, 25, "Welcome to Snak3D!");
+    snprintf(bufferInstruction, 25, "Press SPACE to start");
 
-    TextRendering_PrintString(window, buffer, -0.05f+pad/10, 0.5f+2*pad/10, 1.0f);
-}
-
-// Escrevemos instrução para reiniciar jogo
-void TextRendering_ShowRestartGameMessage(GLFWwindow* window)
-{
-    if ( !g_ShowInfoText )
-        return;
-
-    float pad = TextRendering_LineHeight(window);
-
-    char buffer[25];
-    snprintf(buffer, 25, "Press SPACE to continue");
-
-    TextRendering_PrintString(window, buffer, -0.2f+pad/10, 0.1f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, bufferWelcome, -0.2f+pad/10, 0.3f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, bufferInstruction, -0.22f+pad/10, 0.1f+2*pad/10, 1.0f);
 }
 
 // Função para debugging: imprime no terminal todas informações de um modelo
