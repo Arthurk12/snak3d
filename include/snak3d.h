@@ -10,6 +10,15 @@
 
 #define TITLE "SNAK3D"
 
+//object IDs
+#define PLANE  0
+#define FRUIT  1
+#define SNAKE_HEAD 2
+#define BOTTOM_SIDE 3
+#define LEFT_SIDE   4
+#define TOP_SIDE    5
+#define RIGHT_SIDE  6
+
 // Direções em que a cobra estará se movimentando
 #define UP    0
 #define DOWN  180

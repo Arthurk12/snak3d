@@ -113,6 +113,13 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 float degreesToRadians( float degrees);
+void resetGame();
+void assignSnakeBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max);
+void assignFruitBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max);
+void assignBottomSideBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max);
+void assignLeftSideBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max);
+void assignTopSideBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max);
+void assignRightSideBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -190,6 +197,7 @@ GLuint g_NumLoadedTextures = 0;
 
 Snake snake;
 GameElement fruit;
+GameElement sides[4];
 
 int main(int argc, char* argv[])
 {
@@ -274,6 +282,14 @@ int main(int argc, char* argv[])
     ComputeNormals(&planeModel);
     BuildTrianglesAndAddToVirtualScene(&planeModel);
 
+    ObjModel upDownSideModel("../../data/upDownSide.obj");
+    ComputeNormals(&upDownSideModel);
+    BuildTrianglesAndAddToVirtualScene(&upDownSideModel);
+
+    ObjModel leftRightSideModel("../../data/leftRightSide.obj");
+    ComputeNormals(&leftRightSideModel);
+    BuildTrianglesAndAddToVirtualScene(&leftRightSideModel);
+
     ObjModel snakeHeadModel("../../data/snake_head.obj");
     ComputeNormals(&snakeHeadModel);
     BuildTrianglesAndAddToVirtualScene(&snakeHeadModel);
@@ -304,6 +320,22 @@ int main(int argc, char* argv[])
     glm::mat4 the_projection;
     glm::mat4 the_model;
     glm::mat4 the_view;
+
+    sides[0].position.x = 0;
+    sides[0].position.y = -1.1;
+    sides[0].position.z = -1;
+
+    sides[1].position.x = -1;//-1;
+    sides[1].position.y = -1.1;//-0.6f;
+    sides[1].position.z = 0;
+
+    sides[2].position.x = 0;
+    sides[2].position.y = -1.1;
+    sides[2].position.z = 1;
+
+    sides[3].position.x = 1;//1;
+    sides[3].position.y = -1.1;//-0.6f;
+    sides[3].position.z = 0;
 
     // Posição X e Y em relação ao tabuleiro da posição inicial da fruta
     srand((unsigned)time(NULL));
@@ -397,10 +429,6 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        #define PLANE  0
-        #define FRUIT  1
-        #define SNAKE_HEAD 2
-
 
         float actualTime = trunc(100 * (float)glfwGetTime()) / 100;
 
@@ -441,6 +469,22 @@ int main(int argc, char* argv[])
             printf("fruit position: (%f, %f, %f) \n", fruit.position.x, fruit.position.y, fruit.position.z);
             printf("fruit bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", fruit.bbox_min.x, fruit.bbox_min.y, fruit.bbox_min.z, fruit.bbox_max.x, fruit.bbox_max.y, fruit.bbox_max.z);
             #endif // DEBUG
+            printf("BOTTOM\n");
+            if(checkCubePlaneCollision(snake.ge, sides[0])){
+                resetGame();
+            }
+            printf("LEFT\n");
+            if(checkCubePlaneCollision(snake.ge, sides[1])){
+                resetGame();
+            }
+            printf("TOP\n");
+            if(checkCubePlaneCollision(snake.ge, sides[2])){
+                resetGame();
+            }
+            printf("RIGHT\n");
+            if(checkCubePlaneCollision(snake.ge, sides[3])){
+                resetGame();
+            }
 
             // Desenhamos o modelo da cobra
             model = Matrix_Translate(snake.ge.position.x, snake.ge.position.y, snake.ge.position.z)
@@ -449,6 +493,7 @@ int main(int argc, char* argv[])
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, SNAKE_HEAD);
             DrawVirtualObject("snake_head");
+            assignSnakeBBOX(g_VirtualScene["snake_head"].bbox_min, g_VirtualScene["snake_head"].bbox_max);
 
             // Nesse condicional vamos testar a colisão, se colidiu cria nova posição pra fruta
             // e incrementa 1 ao score
@@ -466,12 +511,47 @@ int main(int argc, char* argv[])
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glUniform1i(object_id_uniform, FRUIT);
             DrawVirtualObject("fruit");
+            assignFruitBBOX(g_VirtualScene["fruit"].bbox_min, g_VirtualScene["fruit"].bbox_max);
 
             // Desenhamos o plano do chão
             model = Matrix_Translate(0.0f,-1.1f,0.0f);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, PLANE);
             DrawVirtualObject("plane");
+
+            //bottom side
+            model = Matrix_Translate(sides[0].position.x, sides[0].position.y, sides[0].position.z);
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, BOTTOM_SIDE);
+            DrawVirtualObject("upDownSide");
+            assignBottomSideBBOX(g_VirtualScene["upDownSide"].bbox_min, g_VirtualScene["upDownSide"].bbox_max);
+
+            //left side
+            model = Matrix_Translate(sides[1].position.x, sides[1].position.y, sides[1].position.z)
+                * Matrix_Rotate_Y(degreesToRadians(180));
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, LEFT_SIDE);
+            DrawVirtualObject("leftRightSide");
+            assignLeftSideBBOX(g_VirtualScene["leftRightSide"].bbox_min, g_VirtualScene["leftRightSide"].bbox_max);
+
+            //top side
+            model = Matrix_Translate(sides[2].position.x, sides[2].position.y, sides[2].position.z)
+                * Matrix_Rotate_Y(degreesToRadians(180));
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, TOP_SIDE);
+            DrawVirtualObject("upDownSide");
+            assignTopSideBBOX(g_VirtualScene["upDownSide"].bbox_min, g_VirtualScene["upDownSide"].bbox_max);
+
+
+            //right side
+            model = Matrix_Translate(sides[3].position.x, sides[3].position.y, sides[3].position.z);
+                //* Matrix_Rotate_Z(degreesToRadians(-90))
+                //* Matrix_Rotate_Y(degreesToRadians(180));
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, RIGHT_SIDE);
+            DrawVirtualObject("leftRightSide");
+            assignRightSideBBOX(g_VirtualScene["leftRightSide"].bbox_min, g_VirtualScene["leftRightSide"].bbox_max);
+
 
             // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
             // passamos por todos os sistemas de coordenadas armazenados nas
@@ -528,6 +608,12 @@ float degreesToRadians( float degrees) {
     return degrees/180 * M_PI;
 }
 
+void resetGame () {
+    snake.ge.score = 0;
+    snake.direction = UP;
+    snake.ge.position = glm::vec3(SNAKE_INITIAL_POSITION_X, -1, SNAKE_INITIAL_POSITION_Z);
+}
+
 // Função que carrega uma imagem para ser utilizada como textura
 void LoadTextureImage(const char* filename)
 {
@@ -581,13 +667,33 @@ void LoadTextureImage(const char* filename)
 }
 
 void assignSnakeBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max) {
-  snake.ge.bbox_min = bbox_min;
-  snake.ge.bbox_max = bbox_max;
+  snake.ge.bbox_min = bbox_min * snake.ge.scale;
+  snake.ge.bbox_max = bbox_max * snake.ge.scale;
 }
 
 void assignFruitBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max) {
-  fruit.bbox_min = bbox_min;
-  fruit.bbox_max = bbox_max;
+  fruit.bbox_min = bbox_min * fruit.scale;
+  fruit.bbox_max = bbox_max * fruit.scale;
+}
+
+void assignBottomSideBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max) {
+  sides[0].bbox_min = bbox_min * sides[0].scale;
+  sides[0].bbox_max = bbox_max * sides[0].scale;
+}
+
+void assignLeftSideBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max) {
+  sides[1].bbox_min = bbox_min * sides[1].scale;
+  sides[1].bbox_max = bbox_max * sides[1].scale;
+}
+
+void assignTopSideBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max) {
+  sides[2].bbox_min = bbox_min * sides[2].scale;
+  sides[2].bbox_max = bbox_max * sides[2].scale;
+}
+
+void assignRightSideBBOX(glm::vec3 bbox_min, glm::vec3 bbox_max) {
+  sides[3].bbox_min = bbox_min  * sides[3].scale;
+  sides[3].bbox_max = bbox_max  * sides[3].scale;
 }
 
 // Função que desenha um objeto armazenado em g_VirtualScene. Veja definição
@@ -605,12 +711,6 @@ void DrawVirtualObject(const char* object_name)
     glm::vec3 bbox_max = g_VirtualScene[object_name].bbox_max;
     glUniform4f(bbox_min_uniform, bbox_min.x, bbox_min.y, bbox_min.z, 1.0f);
     glUniform4f(bbox_max_uniform, bbox_max.x, bbox_max.y, bbox_max.z, 1.0f);
-    if(strcmp(object_name, "snake_head") == 0) {
-      assignSnakeBBOX(bbox_min, bbox_max);
-    }
-    if(strcmp(object_name, "fruit") == 0) {
-      assignFruitBBOX(bbox_min, bbox_max);
-    }
 
     // Pedimos para a GPU rasterizar os vértices dos eixos XYZ
     // apontados pelo VAO como linhas. Veja a definição de
