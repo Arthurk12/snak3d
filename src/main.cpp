@@ -279,6 +279,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/lawn_texture.jpg");        // TextureImage0
     LoadTextureImage("../../data/fruit_texture.jpeg");      // TextureImage1
     LoadTextureImage("../../data/snake_texture.jpeg");      // TextureImage2
+    LoadTextureImage("../../data/landscape.jpeg");
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planeModel("../../data/plane.obj");
@@ -300,6 +301,11 @@ int main(int argc, char* argv[])
     ObjModel fruitModel("../../data/fruit.obj");
     ComputeNormals(&fruitModel);
     BuildTrianglesAndAddToVirtualScene(&fruitModel);
+
+    ObjModel landscapeModel("../../data/flippedNormalsSphere.obj");
+    ComputeNormals(&landscapeModel);
+    BuildTrianglesAndAddToVirtualScene(&landscapeModel);
+
 
     if ( argc > 1 )
     {
@@ -401,7 +407,7 @@ int main(int argc, char* argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
+        float farplane  = -100.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -569,6 +575,11 @@ int main(int argc, char* argv[])
             DrawVirtualObject("leftRightSide");
             assignRightSideBBOX(g_VirtualScene["leftRightSide"].bbox_min, g_VirtualScene["leftRightSide"].bbox_max);
 
+            model = Matrix_Translate(0.0f,0.0f,0.0f)
+                    * Matrix_Scale(5.0f, 5.0f, 5.0f);
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, LANDSCAPE);
+            DrawVirtualObject("flippedNormalsSphere");
 
             // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
             // passamos por todos os sistemas de coordenadas armazenados nas
@@ -798,6 +809,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage0"), 0);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage2"), 2);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage3"), 3);
     glUseProgram(0);
 }
 

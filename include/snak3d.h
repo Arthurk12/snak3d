@@ -18,6 +18,7 @@
 #define LEFT_SIDE   4
 #define TOP_SIDE    5
 #define RIGHT_SIDE  6
+#define LANDSCAPE  7
 
 // Direções em que a cobra estará se movimentando
 #define UP    0
