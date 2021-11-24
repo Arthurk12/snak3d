@@ -326,17 +326,17 @@ int main(int argc, char* argv[])
 
     sides[0].position.x = 0;
     sides[0].position.y = -1.1;
-    sides[0].position.z = -1;
+    sides[0].position.z = -1.5;
 
-    sides[1].position.x = -1;//-1;
+    sides[1].position.x = -1.5;//-1;
     sides[1].position.y = -1.1;//-0.6f;
     sides[1].position.z = 0;
 
     sides[2].position.x = 0;
     sides[2].position.y = -1.1;
-    sides[2].position.z = 1;
+    sides[2].position.z = 1.5;
 
-    sides[3].position.x = 1;//1;
+    sides[3].position.x = 1.5;//1;
     sides[3].position.y = -1.1;//-0.6f;
     sides[3].position.z = 0;
 
@@ -526,13 +526,15 @@ int main(int argc, char* argv[])
             assignFruitBBOX(g_VirtualScene["fruit"].bbox_min, g_VirtualScene["fruit"].bbox_max);
 
             // Desenhamos o plano do chão
-            model = Matrix_Translate(0.0f,-1.1f,0.0f);
+            model = Matrix_Translate(0.0f,-1.1f,0.0f)
+                    * Matrix_Scale(1.5f, 1.5f, 1.5f);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, PLANE);
             DrawVirtualObject("plane");
 
             //bottom side
-            model = Matrix_Translate(sides[0].position.x, sides[0].position.y, sides[0].position.z);
+            model = Matrix_Translate(sides[0].position.x, sides[0].position.y, sides[0].position.z)
+                    * Matrix_Scale(1.5f, 1.0f, 1.0f);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, BOTTOM_SIDE);
             DrawVirtualObject("upDownSide");
@@ -540,7 +542,8 @@ int main(int argc, char* argv[])
 
             //left side
             model = Matrix_Translate(sides[1].position.x, sides[1].position.y, sides[1].position.z)
-                * Matrix_Rotate_Y(degreesToRadians(180));
+                * Matrix_Rotate_Y(degreesToRadians(180))
+                * Matrix_Scale(1.0f, 1.0f, 1.5f);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, LEFT_SIDE);
             DrawVirtualObject("leftRightSide");
@@ -548,7 +551,8 @@ int main(int argc, char* argv[])
 
             //top side
             model = Matrix_Translate(sides[2].position.x, sides[2].position.y, sides[2].position.z)
-                * Matrix_Rotate_Y(degreesToRadians(180));
+                * Matrix_Rotate_Y(degreesToRadians(180))
+                * Matrix_Scale(1.5f, 1.0f, 1.0f);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, TOP_SIDE);
             DrawVirtualObject("upDownSide");
@@ -556,7 +560,8 @@ int main(int argc, char* argv[])
 
 
             //right side
-            model = Matrix_Translate(sides[3].position.x, sides[3].position.y, sides[3].position.z);
+            model = Matrix_Translate(sides[3].position.x, sides[3].position.y, sides[3].position.z)
+                    * Matrix_Scale(1.0f, 1.0f, 1.5f);
                 //* Matrix_Rotate_Z(degreesToRadians(-90))
                 //* Matrix_Rotate_Y(degreesToRadians(180));
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
