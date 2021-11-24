@@ -1,9 +1,9 @@
-g upDownSide
+g rightSide
 
-v 1 0 0
-v 1 0.5 0
-v -1 0.5 0
-v -1 0 0
+v 0 0 1
+v 0 0.5 1
+v 0 0.5 -1
+v 0 0 -1
 
 vt 0 0
 vt 1 0

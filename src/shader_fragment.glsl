@@ -22,6 +22,10 @@ uniform mat4 projection;
 #define PLANE  0
 #define FRUIT  1
 #define SNAKE_HEAD 2
+#define BOTTOM_SIDE 3
+#define LEFT_SIDE   4
+#define TOP_SIDE    5
+#define RIGHT_SIDE  6
 #define LANDSCAPE 7
 uniform int object_id;
 
@@ -34,6 +38,7 @@ uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
+uniform sampler2D TextureImage4;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec3 color;
@@ -140,6 +145,15 @@ void main()
         V = (phi   + M_PI/2) / M_PI;
         textureColor = texture(TextureImage3, vec2(U,V)).rgb;
     }
+    else if( object_id == BOTTOM_SIDE   ||
+             object_id == LEFT_SIDE     ||
+             object_id == TOP_SIDE      ||
+             object_id == RIGHT_SIDE)
+     {
+        U = texcoords.y;
+        V = texcoords.x;
+        textureColor = texture(TextureImage4, vec2(U,V)).rgb;;
+     }
     else if ( object_id == PLANE )
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.

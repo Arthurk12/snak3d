@@ -279,20 +279,28 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/lawn_texture.jpg");        // TextureImage0
     LoadTextureImage("../../data/fruit_texture.jpeg");      // TextureImage1
     LoadTextureImage("../../data/snake_texture.jpeg");      // TextureImage2
-    LoadTextureImage("../../data/landscape.jpeg");
+    LoadTextureImage("../../data/woodFence.jpeg");          // TextureImage4
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planeModel("../../data/plane.obj");
     ComputeNormals(&planeModel);
     BuildTrianglesAndAddToVirtualScene(&planeModel);
 
-    ObjModel upDownSideModel("../../data/upDownSide.obj");
-    ComputeNormals(&upDownSideModel);
-    BuildTrianglesAndAddToVirtualScene(&upDownSideModel);
+    ObjModel downSideModel("../../data/downSide.obj");
+    ComputeNormals(&downSideModel);
+    BuildTrianglesAndAddToVirtualScene(&downSideModel);
 
-    ObjModel leftRightSideModel("../../data/leftRightSide.obj");
-    ComputeNormals(&leftRightSideModel);
-    BuildTrianglesAndAddToVirtualScene(&leftRightSideModel);
+    ObjModel rightSideModel("../../data/rightSide.obj");
+    ComputeNormals(&rightSideModel);
+    BuildTrianglesAndAddToVirtualScene(&rightSideModel);
+
+    ObjModel leftSideModel("../../data/leftSide.obj");
+    ComputeNormals(&leftSideModel);
+    BuildTrianglesAndAddToVirtualScene(&leftSideModel);
+
+    ObjModel upSideModel("../../data/upSide.obj");
+    ComputeNormals(&upSideModel);
+    BuildTrianglesAndAddToVirtualScene(&upSideModel);
 
     ObjModel snakeHeadModel("../../data/snake_head.obj");
     ComputeNormals(&snakeHeadModel);
@@ -543,26 +551,24 @@ int main(int argc, char* argv[])
                     * Matrix_Scale(1.5f, 1.0f, 1.0f);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, BOTTOM_SIDE);
-            DrawVirtualObject("upDownSide");
-            assignBottomSideBBOX(g_VirtualScene["upDownSide"].bbox_min, g_VirtualScene["upDownSide"].bbox_max);
+            DrawVirtualObject("downSide");
+            assignBottomSideBBOX(g_VirtualScene["downSide"].bbox_min, g_VirtualScene["downSide"].bbox_max);
 
             //left side
             model = Matrix_Translate(sides[1].position.x, sides[1].position.y, sides[1].position.z)
-                * Matrix_Rotate_Y(degreesToRadians(180))
                 * Matrix_Scale(1.0f, 1.0f, 1.5f);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, LEFT_SIDE);
-            DrawVirtualObject("leftRightSide");
-            assignLeftSideBBOX(g_VirtualScene["leftRightSide"].bbox_min, g_VirtualScene["leftRightSide"].bbox_max);
+            DrawVirtualObject("leftSide");
+            assignLeftSideBBOX(g_VirtualScene["leftSide"].bbox_min, g_VirtualScene["leftSide"].bbox_max);
 
             //top side
             model = Matrix_Translate(sides[2].position.x, sides[2].position.y, sides[2].position.z)
-                * Matrix_Rotate_Y(degreesToRadians(180))
                 * Matrix_Scale(1.5f, 1.0f, 1.0f);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, TOP_SIDE);
-            DrawVirtualObject("upDownSide");
-            assignTopSideBBOX(g_VirtualScene["upDownSide"].bbox_min, g_VirtualScene["upDownSide"].bbox_max);
+            DrawVirtualObject("upSide");
+            assignTopSideBBOX(g_VirtualScene["upSide"].bbox_min, g_VirtualScene["upSide"].bbox_max);
 
 
             //right side
@@ -572,8 +578,8 @@ int main(int argc, char* argv[])
                 //* Matrix_Rotate_Y(degreesToRadians(180));
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, RIGHT_SIDE);
-            DrawVirtualObject("leftRightSide");
-            assignRightSideBBOX(g_VirtualScene["leftRightSide"].bbox_min, g_VirtualScene["leftRightSide"].bbox_max);
+            DrawVirtualObject("rightSide");
+            assignRightSideBBOX(g_VirtualScene["rightSide"].bbox_min, g_VirtualScene["rightSide"].bbox_max);
 
             model = Matrix_Translate(0.0f,0.0f,0.0f)
                     * Matrix_Scale(5.0f, 5.0f, 5.0f);
@@ -810,6 +816,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage2"), 2);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage3"), 3);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage4"), 4);
     glUseProgram(0);
 }
 
