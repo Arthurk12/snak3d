@@ -60,18 +60,28 @@ void main()
     // normais de cada vértice.
     vec4 n = normalize(normal);
 
+    vec4 light_position = vec4(0.0,2.0,0.0,1.0);
+    vec4 light_direction = normalize(vec4(0.0,-1.0,0.0,0.0));
+
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(0.0,1.0,0.0,0.0));
+    vec4 l = normalize(light_position-p);
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
-    vec4 v = normalize(camera_position - p);
+    vec4 v = normalize(l - p);
+
+    // Vetor que define o sentido da reflexão especular ideal.
+    vec4 r = -l+2*n*(dot(n,l));
 
     // Coordenadas de textura U e V
     float U = 0.0;
     float V = 0.0;
 
-    // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+    // Obtemos a refletância difusa a partir da leitura da imagem
     vec3 textureColor;
+
+    vec3 Ks = vec3(0.0,0.0,0.0); // Refletância especular
+    vec3 Ka = vec3(0.2,0.2,0.2); // Refletância ambiente
+    float q = 10.0; // Expoente especular para o modelo de iluminação de Phong
 
     if ( object_id == FRUIT )
     {
@@ -141,10 +151,20 @@ void main()
 
     //vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
 
+    vec3 I = vec3(1.0,1.0,1.0);
+
+    vec3 Ia = vec3(0.2,0.2,0.2);
+
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));
 
-    color = textureColor * (lambert + 0.01);
+    vec3 lambert_diffuse_term = textureColor*I*max(0, dot(n,l));
+
+    vec3 ambient_term = Ka*Ia;
+
+    vec3 phong_specular_term  = Ks*I*pow(max(0,dot(r,v)), q);
+
+    color = lambert_diffuse_term + ambient_term + phong_specular_term;
 
     // Cor final com correção gamma, considerando monitor sRGB.
     // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
