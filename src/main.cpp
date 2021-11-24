@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/chessPattern.png");        // TextureImage0
+    LoadTextureImage("../../data/lawn_texture.jpg");        // TextureImage0
     LoadTextureImage("../../data/fruit_texture.jpeg");      // TextureImage1
     LoadTextureImage("../../data/snake_texture.jpeg");      // TextureImage2
 
