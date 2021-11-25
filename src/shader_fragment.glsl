@@ -90,19 +90,6 @@ void main()
 
     if ( object_id == FRUIT )
     {
-        // PREENCHA AQUI as coordenadas de textura da esfera, computadas com
-        // projeção esférica EM COORDENADAS DO MODELO. Utilize como referência
-        // o slides 134-150 do documento Aula_20_Mapeamento_de_Texturas.pdf.
-        // A esfera que define a projeção deve estar centrada na posição
-        // "bbox_center" definida abaixo.
-
-        // Você deve utilizar:
-        //   função 'length( )' : comprimento Euclidiano de um vetor
-        //   função 'atan( , )' : arcotangente. Veja https://en.wikipedia.org/wiki/Atan2.
-        //   função 'asin( )'   : seno inverso.
-        //   constante M_PI
-        //   variável position_model
-
         vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
 
         vec4 p_texture = bbox_center + normalize(position_model-bbox_center);
@@ -162,9 +149,6 @@ void main()
         textureColor = texture(TextureImage0, vec2(U,V)).rgb;;
     }
 
-
-    //vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
-
     vec3 I = vec3(1.0,1.0,1.0);
 
     vec3 Ia = vec3(0.2,0.2,0.2);
@@ -181,7 +165,6 @@ void main()
     color = lambert_diffuse_term + ambient_term + phong_specular_term;
 
     // Cor final com correção gamma, considerando monitor sRGB.
-    // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
     color = pow(color, vec3(1.0,1.0,1.0)/2.2);
 }
 

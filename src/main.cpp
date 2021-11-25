@@ -37,7 +37,7 @@
 
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
-// arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
+// arquivo ".obj".
 struct ObjModel
 {
     tinyobj::attrib_t                 attrib;
@@ -45,7 +45,6 @@ struct ObjModel
     std::vector<tinyobj::material_t>  materials;
 
     // Este construtor lê o modelo de um arquivo utilizando a biblioteca tinyobjloader.
-    // Veja: https://github.com/syoyo/tinyobjloader
     ObjModel(const char* filename, const char* basepath = NULL, bool triangulate = true)
     {
         printf("Carregando modelo \"%s\"... ", filename);
@@ -95,10 +94,6 @@ void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M,
 
 // Funções abaixo renderizam como texto na janela OpenGL algumas matrizes e
 // outras informações do programa. Definidas após main().
-void TextRendering_ShowModelViewProjection(GLFWwindow* window, glm::mat4 projection, glm::mat4 view, glm::mat4 model, glm::vec4 p_model);
-void TextRendering_ShowEulerAngles(GLFWwindow* window);
-void TextRendering_ShowProjection(GLFWwindow* window);
-void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
 void TextRendering_ShowScore(GLFWwindow* window, Snake *s);
 void TextRendering_ShowPause(GLFWwindow* window);
 void TextRendering_ShowFinalGame(GLFWwindow* window);
@@ -151,16 +146,9 @@ std::stack<glm::mat4>  g_MatrixStack;
 // Razão de proporção da janela (largura/altura). Veja função FramebufferSizeCallback().
 float g_ScreenRatio = 1.0f;
 
-// Ângulos de Euler que controlam a rotação de um dos cubos da cena virtual
-float g_AngleX = 0.0f;
-float g_AngleY = 0.0f;
-float g_AngleZ = 0.0f;
-
 // "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
 // pressionado no momento atual. Veja função MouseButtonCallback().
 bool g_LeftMouseButtonPressed = false;
-bool g_RightMouseButtonPressed = false; // Análogo para botão direito do mouse
-bool g_MiddleMouseButtonPressed = false; // Análogo para botão do meio do mouse
 
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
@@ -169,17 +157,6 @@ bool g_MiddleMouseButtonPressed = false; // Análogo para botão do meio do mous
 float g_CameraTheta = 0.0f; // Ângulo no plano ZX em relação ao eixo Z
 float g_CameraPhi = 0.0f;   // Ângulo em relação ao eixo Y
 float g_CameraDistance = 3.5f; // Distância da câmera para a origem
-
-// Variáveis que controlam rotação do antebraço
-float g_ForearmAngleZ = 0.0f;
-float g_ForearmAngleX = 0.0f;
-
-// Variáveis que controlam translação do torso
-float g_TorsoPositionX = 0.0f;
-float g_TorsoPositionY = 0.0f;
-
-// Variável que controla o tipo de projeção utilizada: perspectiva ou ortográfica.
-bool g_UsePerspectiveProjection = true;
 
 // Variável que controla se o texto informativo será mostrado na tela.
 bool g_ShowInfoText = true;
@@ -271,7 +248,7 @@ int main(int argc, char* argv[])
     printf("GPU: %s, %s, OpenGL %s, GLSL %s\n", vendor, renderer, glversion, glslversion);
 
     // Carregamos os shaders de vértices e de fragmentos que serão utilizados
-    // para renderização. Veja slides 176-196 do documento Aula_03_Rendering_Pipeline_Grafico.pdf.
+    // para renderização.
     //
     LoadShadersFromFiles();
 
@@ -325,10 +302,10 @@ int main(int argc, char* argv[])
     // Inicializamos o código para renderização de texto.
     TextRendering_Init();
 
-    // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.
+    // Habilitamos o Z-buffer.
     glEnable(GL_DEPTH_TEST);
 
-    // Habilitamos o Backface Culling. Veja slides 23-34 do documento Aula_13_Clipping_and_Culling.pdf.
+    // Habilitamos o Backface Culling.
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
@@ -400,44 +377,26 @@ int main(int argc, char* argv[])
         float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
-        // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
         glm::vec4 camera_lookat_l    = glm::vec4(snake.ge.position.x,snake.ge.position.y,snake.ge.position.z,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
         glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
-        // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
+        // definir o sistema de coordenadas da câmera.
         glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
 
         // Agora computamos a matriz de Projeção.
         glm::mat4 projection;
 
         // Note que, no sistema de coordenadas da câmera, os planos near e far
-        // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
+        // estão no sentido negativo!
         float nearplane = -0.1f;  // Posição do "near plane"
         float farplane  = -100.0f; // Posição do "far plane"
 
-        if (g_UsePerspectiveProjection)
-        {
-            // Projeção Perspectiva.
-            // Para definição do field of view (FOV), veja slides 205-215 do documento Aula_09_Projecoes.pdf.
-            float field_of_view = 3.141592 / 3.0f;
-            projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
-        }
-        else
-        {
-            // Projeção Ortográfica.
-            // Para definição dos valores l, r, b, t ("left", "right", "bottom", "top"),
-            // PARA PROJEÇÃO ORTOGRÁFICA veja slides 219-224 do documento Aula_09_Projecoes.pdf.
-            // Para simular um "zoom" ortográfico, computamos o valor de "t"
-            // utilizando a variável g_CameraDistance.
-            float t = 1.5f*g_CameraDistance/2.5f;
-            float b = -t;
-            float r = t*g_ScreenRatio;
-            float l = -r;
-            projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
-        }
+        // Projeção Perspectiva.
+        float field_of_view = 3.141592 / 3.0f;
+        projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
@@ -447,13 +406,14 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-
         float actualTime = trunc(100 * (float)glfwGetTime()) / 100;
 
+        // Se jogo estiver pausado mostra mensagem na tela
         if (!snake.ge.started) {
             // Imprimimos na tela instrução para iniciar o jogo
             TextRendering_ShowStartGameMessage(window);
         }
+        // Se o jogo terminou mostra a mensagem na tela
         else if(snake.ge.finished){
             // Imprimimos na tela o menu de fim de jogo
             TextRendering_ShowFinalGame(window);
@@ -496,19 +456,20 @@ int main(int argc, char* argv[])
             printf("fruit position: (%f, %f, %f) \n", fruit.position.x, fruit.position.y, fruit.position.z);
             printf("fruit bbboxmin: (%f, %f, %f) ,   bbboxmax: (%f, %f, %f) \n", fruit.bbox_min.x, fruit.bbox_min.y, fruit.bbox_min.z, fruit.bbox_max.x, fruit.bbox_max.y, fruit.bbox_max.z);
             #endif // DEBUG
-            printf("BOTTOM\n");
+
+            // DEBUG printf("BOTTOM\n");
             if(checkCubePlaneCollision(snake.ge, sides[0])){
                 finishGame();
             }
-            printf("LEFT\n");
+            // DEBUG printf("LEFT\n");
             if(checkCubePlaneCollision(snake.ge, sides[1])){
                 finishGame();
             }
-            printf("TOP\n");
+            // DEBUG printf("TOP\n");
             if(checkCubePlaneCollision(snake.ge, sides[2])){
                 finishGame();
             }
-            printf("RIGHT\n");
+            // DEBUG printf("RIGHT\n");
             if(checkCubePlaneCollision(snake.ge, sides[3])){
                 finishGame();
             }
@@ -531,6 +492,7 @@ int main(int argc, char* argv[])
                 fruit.position.z = ((float)(rand() % 184) / 100) - 0.92;
             }
 
+            // Desenhamos a fruta
             model = Matrix_Translate(fruit.position.x,fruit.position.y,fruit.position.z)
                 * Matrix_Scale(fruit.scale.x, fruit.scale.y, fruit.scale.z)
                 * Matrix_Rotate_Y((float)glfwGetTime() * 0.1f)
@@ -571,7 +533,6 @@ int main(int argc, char* argv[])
             DrawVirtualObject("upSide");
             assignTopSideBBOX(g_VirtualScene["upSide"].bbox_min, g_VirtualScene["upSide"].bbox_max);
 
-
             //right side
             model = Matrix_Translate(sides[3].position.x, sides[3].position.y, sides[3].position.z)
                     * Matrix_Scale(1.0f, 1.0f, 1.5f);
@@ -587,24 +548,6 @@ int main(int argc, char* argv[])
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, LANDSCAPE);
             DrawVirtualObject("flippedNormalsSphere");
-
-            // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
-            // passamos por todos os sistemas de coordenadas armazenados nas
-            // matrizes the_model, the_view, e the_projection; e escrevemos na tela
-            // as matrizes e pontos resultantes dessas transformações.
-            //glm::vec4 p_model(0.5f, 0.5f, 0.5f, 1.0f);
-            //TextRendering_ShowModelViewProjection(window, projection, view, model, p_model);
-
-            // Imprimimos na tela os ângulos de Euler que controlam a rotação do
-            // terceiro cubo.
-            TextRendering_ShowEulerAngles(window);
-
-            // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
-            TextRendering_ShowProjection(window);
-
-            // Imprimimos na tela informação sobre o número de quadros renderizados
-            // por segundo (frames per second).
-            TextRendering_ShowFramesPerSecond(window);
         }
         else {
             // Imprimimos na tela menu de pause
@@ -622,7 +565,6 @@ int main(int argc, char* argv[])
         // seria possível ver artefatos conhecidos como "screen tearing". A
         // chamada abaixo faz a troca dos buffers, mostrando para o usuário
         // tudo que foi renderizado pelas funções acima.
-        // Veja o link: Veja o link: https://en.wikipedia.org/w/index.php?title=Multiple_buffering&oldid=793452829#Double_buffering_in_computer_graphics
         glfwSwapBuffers(window);
 
         // Verificamos com o sistema operacional se houve alguma interação do
@@ -647,6 +589,7 @@ void resetGame() {
     snake.ge.score = 0;
     snake.direction = UP;
     snake.ge.position = glm::vec3(SNAKE_INITIAL_POSITION_X, -1, SNAKE_INITIAL_POSITION_Z);
+    snake.speed = SNAKE_INITIAL_SPEED;
 }
 
 void finishGame() {
@@ -769,7 +712,7 @@ void DrawVirtualObject(const char* object_name)
 }
 
 // Função que carrega os shaders de vértices e de fragmentos que serão
-// utilizados para renderização. Veja slides 176-196 do documento Aula_03_Rendering_Pipeline_Grafico.pdf.
+// utilizados para renderização.
 //
 void LoadShadersFromFiles()
 {
@@ -1242,38 +1185,6 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         // variável abaixo para false.
         g_LeftMouseButtonPressed = false;
     }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-    {
-        // Se o usuário pressionou o botão esquerdo do mouse, guardamos a
-        // posição atual do cursor nas variáveis g_LastCursorPosX e
-        // g_LastCursorPosY.  Também, setamos a variável
-        // g_RightMouseButtonPressed como true, para saber que o usuário está
-        // com o botão esquerdo pressionado.
-        glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
-        g_RightMouseButtonPressed = true;
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
-    {
-        // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
-        // variável abaixo para false.
-        g_RightMouseButtonPressed = false;
-    }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
-    {
-        // Se o usuário pressionou o botão esquerdo do mouse, guardamos a
-        // posição atual do cursor nas variáveis g_LastCursorPosX e
-        // g_LastCursorPosY.  Também, setamos a variável
-        // g_MiddleMouseButtonPressed como true, para saber que o usuário está
-        // com o botão esquerdo pressionado.
-        glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
-        g_MiddleMouseButtonPressed = true;
-    }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
-    {
-        // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
-        // variável abaixo para false.
-        g_MiddleMouseButtonPressed = false;
-    }
 }
 
 // Função callback chamada sempre que o usuário movimentar o cursor do mouse em
@@ -1311,38 +1222,6 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
         g_LastCursorPosX = xpos;
         g_LastCursorPosY = ypos;
     }
-
-    if (g_RightMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_ForearmAngleZ -= 0.01f*dx;
-        g_ForearmAngleX += 0.01f*dy;
-
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
-    }
-
-    if (g_MiddleMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_TorsoPositionX += 0.01f*dx;
-        g_TorsoPositionY -= 0.01f*dy;
-
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
-    }
 }
 
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
@@ -1363,83 +1242,15 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
-// tecla do teclado. Veja http://www.glfw.org/docs/latest/input_guide.html#input_key
+// tecla do teclado.
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 {
-    // ==============
-    // Não modifique este loop! Ele é utilizando para correção automatizada dos
-    // laboratórios. Deve ser sempre o primeiro comando desta função KeyCallback().
-    for (int i = 0; i < 10; ++i)
-        if (key == GLFW_KEY_0 + i && action == GLFW_PRESS && mod == GLFW_MOD_SHIFT)
-            std::exit(100 + i);
-    // ==============
-
     // Se o usuário pressionar a tecla ESC, fechamos a janela.
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
     if (!snake.ge.paused){
-        // O código abaixo implementa a seguinte lógica:
-        //   Se apertar tecla X       então g_AngleX += delta;
-        //   Se apertar tecla shift+X então g_AngleX -= delta;
-        //   Se apertar tecla Y       então g_AngleY += delta;
-        //   Se apertar tecla shift+Y então g_AngleY -= delta;
-        //   Se apertar tecla Z       então g_AngleZ += delta;
-        //   Se apertar tecla shift+Z então g_AngleZ -= delta;
-
         float delta = 3.141592 / 16; // 22.5 graus, em radianos.
-
-        if (key == GLFW_KEY_X && action == GLFW_PRESS)
-        {
-            g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-        }
-
-        if (key == GLFW_KEY_Y && action == GLFW_PRESS)
-        {
-            g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-        }
-        if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-        {
-            g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-        }
-
-        // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
-        if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-        {
-            g_AngleX = 0.0f;
-            g_AngleY = 0.0f;
-            g_AngleZ = 0.0f;
-            g_ForearmAngleX = 0.0f;
-            g_ForearmAngleZ = 0.0f;
-            g_TorsoPositionX = 0.0f;
-            g_TorsoPositionY = 0.0f;
-        }
-
-        // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
-        if (key == GLFW_KEY_P && action == GLFW_PRESS)
-        {
-            g_UsePerspectiveProjection = true;
-        }
-
-        // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
-        if (key == GLFW_KEY_O && action == GLFW_PRESS)
-        {
-            g_UsePerspectiveProjection = false;
-        }
-
-        // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
-        if (key == GLFW_KEY_H && action == GLFW_PRESS)
-        {
-            g_ShowInfoText = !g_ShowInfoText;
-        }
-
-        // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
-        if (key == GLFW_KEY_R && action == GLFW_PRESS)
-        {
-            LoadShadersFromFiles();
-            fprintf(stdout,"Shaders recarregados!\n");
-            fflush(stdout);
-        }
 
         // Se o usuário apertar a tecla A, movemos a cobra para a esquerda.
         if (key == GLFW_KEY_A && action == GLFW_PRESS && snake.direction != RIGHT)
@@ -1552,72 +1363,6 @@ void TextRendering_ShowModelViewProjection(
 
     TextRendering_PrintString(window, " Viewport matrix           NDC      In Pixel Coords.", -1.0f, 1.0f-25*pad, 1.0f);
     TextRendering_PrintMatrixVectorProductMoreDigits(window, viewport_mapping, p_ndc, -1.0f, 1.0f-26*pad, 1.0f);
-}
-
-// Escrevemos na tela os ângulos de Euler definidos nas variáveis globais
-// g_AngleX, g_AngleY, e g_AngleZ.
-void TextRendering_ShowEulerAngles(GLFWwindow* window)
-{
-    if ( !g_ShowInfoText )
-        return;
-
-    float pad = TextRendering_LineHeight(window);
-
-    char buffer[80];
-    snprintf(buffer, 80, "Euler Angles rotation matrix = Z(%.2f)*Y(%.2f)*X(%.2f)\n", g_AngleZ, g_AngleY, g_AngleX);
-
-    TextRendering_PrintString(window, buffer, -1.0f+pad/10, -1.0f+2*pad/10, 1.0f);
-}
-
-// Escrevemos na tela qual matriz de projeção está sendo utilizada.
-void TextRendering_ShowProjection(GLFWwindow* window)
-{
-    if ( !g_ShowInfoText )
-        return;
-
-    float lineheight = TextRendering_LineHeight(window);
-    float charwidth = TextRendering_CharWidth(window);
-
-    if ( g_UsePerspectiveProjection )
-        TextRendering_PrintString(window, "Perspective", 1.0f-13*charwidth, -1.0f+2*lineheight/10, 1.0f);
-    else
-        TextRendering_PrintString(window, "Orthographic", 1.0f-13*charwidth, -1.0f+2*lineheight/10, 1.0f);
-}
-
-// Escrevemos na tela o número de quadros renderizados por segundo (frames per
-// second).
-void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
-{
-    if ( !g_ShowInfoText )
-        return;
-
-    // Variáveis estáticas (static) mantém seus valores entre chamadas
-    // subsequentes da função!
-    static float old_seconds = (float)glfwGetTime();
-    static int   ellapsed_frames = 0;
-    static char  buffer[20] = "?? fps";
-    static int   numchars = 7;
-
-    ellapsed_frames += 1;
-
-    // Recuperamos o número de segundos que passou desde a execução do programa
-    float seconds = (float)glfwGetTime();
-
-    // Número de segundos desde o último cálculo do fps
-    float ellapsed_seconds = seconds - old_seconds;
-
-    if ( ellapsed_seconds > 1.0f )
-    {
-        numchars = snprintf(buffer, 20, "%.2f fps", ellapsed_frames / ellapsed_seconds);
-
-        old_seconds = seconds;
-        ellapsed_frames = 0;
-    }
-
-    float lineheight = TextRendering_LineHeight(window);
-    float charwidth = TextRendering_CharWidth(window);
-
-    TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0f-lineheight, 1.0f);
 }
 
 // Escrevemos na tela o score do jogador.
