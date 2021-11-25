@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/fruit_texture.jpeg");      // TextureImage1
     LoadTextureImage("../../data/snake_texture.jpeg");      // TextureImage2
     LoadTextureImage("../../data/landscape.jpeg");          // TextureImage3
-    LoadTextureImage("../../data/grassFence.png");          // TextureImage4
+    LoadTextureImage("../../data/woodFence.jpeg");          // TextureImage4
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planeModel("../../data/plane.obj");
@@ -640,7 +640,7 @@ int main(int argc, char* argv[])
 }
 
 float degreesToRadians( float degrees) {
-    return degrees/180 * M_PI;
+    return degrees/180 * 3.141592;
 }
 
 void resetGame() {
