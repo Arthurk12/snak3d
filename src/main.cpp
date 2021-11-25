@@ -344,7 +344,7 @@ int main(int argc, char* argv[])
     snake.ge.position.z = SNAKE_INITIAL_POSITION_Z;
     snake.ge.scale = glm::vec3 (0.04, 0.04, 0.04);
 
-    float oldTime = trunc(100 * (float)glfwGetTime()) / 100;
+    float oldTime = trunc(50 * (float)glfwGetTime()) / 50;
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -406,7 +406,7 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        float actualTime = trunc(100 * (float)glfwGetTime()) / 100;
+        float actualTime = trunc(50 * (float)glfwGetTime()) / 50;
 
         // Se jogo estiver pausado mostra mensagem na tela
         if (!snake.ge.started) {
